@@ -165,9 +165,14 @@ const sendWithWP = async (kurumMessageAPI, hissedarlar, message_txt, kurum_id, k
             message_txt= `Muhterem hissedarımız, ${kurban_no} NO'lu kurbanınız ile alakalı durum takibi ve bilgilere ${process.env.NODE_ENV === "production" ? process.env.CLIENT_URL_PROD : process.env.CLIENT_URL_LOCAL}/kurban-info/${kurban_code} adresinden ulaşabilirsiniz.`
         }
 
+        const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
         for (let index = 0; index < GSMs.length; index++) {
-            const result = await sendWpMessage(GSMs[index], message_txt, kurumMessageAPI.appkey, kurumMessageAPI.authkey)
+            const result = await sendWpMessage(GSMs[index], message_txt, kurumMessageAPI.whatsapp_appkey, kurumMessageAPI.whatsapp_authkey)
             console.log(result)
+            if (index < GSMs.length - 1) {
+                await sleep(1000);
+            }
         }
 
         return true
@@ -178,8 +183,8 @@ const sendWithWP = async (kurumMessageAPI, hissedarlar, message_txt, kurum_id, k
 
 async function sendWpMessage(to, text, appkey, authkey) {
     const form = new FormData();
-    form.append('appkey',  '0cf542e8-2fa1-49b0-9f5b-bccd47ec9052');
-    form.append('authkey', 'oRYInnp65ydkONuIFxaWxPIcLIx5WX83A6URPUdXRlm3dMGTCe');
+    form.append('appkey',  appkey);
+    form.append('authkey', authkey);
     form.append('to',      to);
     form.append('message', text);
   
