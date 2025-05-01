@@ -19,6 +19,14 @@ const KurumSchema = new mongoose.Schema({
     active_sms_api: {
         type: mongoose.Types.ObjectId,
         ref: "MessageService"
+    },
+    whatsapp_appkey: {
+        type: String,
+        default: ""
+    },
+    whatsapp_authkey: {
+        type: String,
+        default: ""
     }
     /*
     project: {
