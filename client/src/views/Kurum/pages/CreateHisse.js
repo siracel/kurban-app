@@ -9,6 +9,7 @@ import Card from "../../components/Card"
 import Prev from "../../components/Prev"
 import Title from "../../components/Title"
 import Textarea from "../../components/Textarea"
+import HissedarService from '../../../services/HissedarService';
 
 function CreateHisse() {
   const location = useLocation()
@@ -19,9 +20,71 @@ function CreateHisse() {
   const active_project_id = useSelector((state) => state.kurum.active_project_id)
   if(isKurumAuth) axios.defaults.headers.common['Authorization'] = `Bearer ${kurum.token}`;
   
+  const [hissedars, setHissedars] = useState([]);
+
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false);
   const [errors, setError] = useState([]);
+
+  useEffect(() => {
+    const getHissedars = async () => {
+      setLoading(true)
+      const request = await HissedarService.getAll({kurum_id: kurum._id});
+      if(request.status === 200) {
+        console.log(request.data);
+          setLoading(false)
+          setHissedars(request.data)
+      }
+    }
+    getHissedars()
+
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('#hissedar-autocomplete')) {
+        setShowList(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [])
+
+  // Hissedar arama
+  const [suggestions, setSuggestions] = useState([]);   // Görünen liste
+  const [showList, setShowList]   = useState(false);    // Liste açık / kapalı
+
+  // <input> change’i sadece hissedar adı için yakalıyoruz
+  const onChangeHissedarName = (e) => {
+    const value = e.target.value;
+
+    // formData’yı güncelle
+    setFormData((prev) => ({ ...prev, hissedar_full_name: value }));
+
+    const normalized = value.toLocaleLowerCase('tr');
+
+    //  Filtrele ve göster
+    const filtered = hissedars.filter((h) =>
+      h.hissedar_full_name.toLocaleLowerCase('tr').includes(normalized)
+    );
+    setSuggestions(filtered);
+    setShowList(true);
+  };
+
+  // Bir öneriye tıklandığında hem adı hem GSM’i doldur
+  const selectSuggestion = (h) => {
+    setFormData((prev) => ({
+      ...prev,
+      hissedar_full_name: h.hissedar_full_name,
+      hissedar_gsm: h.hissedar_gsm,
+    }));
+    setShowList(false);
+  };
+
+  // Input’a ilk tıklamada “hepsini” göster
+  const onFocusHissedarName = () => {
+    setSuggestions(hissedars);
+    setShowList(true);
+  };
+
+
   const [formData, setFormData] = useState({
       hissedar_full_name: "",
       hissedar_address: "",
@@ -84,10 +147,39 @@ function CreateHisse() {
                 <Prev />
                 <Title title={`${location.state.kurban_no}.Kurban - Hisse Kayıt (${location.state.hissedar_count+1}/7)`} />
               </div>
-              
 
-              <Input value={hissedar_full_name} title="*Hissedar tam ismi" name="hissedar_full_name" onChange={onChange} errors={errors} />
+              {/* <Input value={hissedar_full_name} title="*Hissedar tam ismi" name="hissedar_full_name" onChange={onChange} errors={errors} /> */}
+
+              <div id="hissedar-autocomplete" className="relative">
+                <Input
+                  value={hissedar_full_name}
+                  title="*Hissedar tam ismi"
+                  name="hissedar_full_name"
+                  onChange={onChangeHissedarName}
+                  onFocus={onFocusHissedarName}
+                  autoComplete="off"
+                  errors={errors}
+                />
+
+                {/* Liste */}
+                {showList && suggestions.length > 0 && (
+                  <ul className="absolute z-10 w-full bg-white border shadow max-h-60 overflow-auto">
+                    {suggestions.map((h) => (
+                      <li
+                        key={h._id}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => selectSuggestion(h)}
+                      >
+                        <span className="font-medium">{h.hissedar_full_name}</span>
+                        <span className="text-xs text-gray-500 ml-2">{h.hissedar_gsm}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
               <Input type="number" min={0} value={hissedar_gsm} title="*Hissedar GSM" name="hissedar_gsm" onChange={onChange} errors={errors} />
+
               <hr className='mb-4 mt-6' />
               <Input value={kapora} title="Kapora" name="kapora" onChange={onChange} errors={errors} />
               <Textarea value={hissedar_address} title="Hissedar adresi" name="hissedar_address" onChange={onChange} errors={errors} />
