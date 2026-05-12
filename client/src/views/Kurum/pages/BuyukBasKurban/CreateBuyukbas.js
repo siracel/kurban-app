@@ -96,38 +96,32 @@ function CreateBuyukbas() {
                 <Title title={"Kurban Oluştur"} />
               </div>
               
-            <label className="block text-sm mb-4">
-                <span className={`text-gray-700 dark:text-gray-400`}>Hisse Grubu:</span>
-                
-       
+            <label htmlFor="kurban_hisse_group" className="block text-sm mb-4">
+                <span className="text-gray-700 dark:text-gray-400">
+                  Hisse Grubu
+                  <span className="text-pink-600 ml-0.5" aria-hidden="true">*</span>:
+                </span>
 
-                  <select value={selected} onChange={(e) => handleDropDown(e)} className="border-gray-400/30 rounded-[0.250rem] form-select appearance-none
-                    block
-                    w-full
-                    px-3
-                    py-1.5
-                    text-base
-                    font-normal
-                    text-gray-700
-                    bg-white bg-clip-padding bg-no-repeat
-                    transition
-                    ease-in-out
-                    m-0
-                    focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none" aria-label="Default select example" disabled={!hisseGroupLoader}>
+                  <select
+                    id="kurban_hisse_group"
+                    value={selected}
+                    onChange={(e) => handleDropDown(e)}
+                    required
+                    aria-required="true"
+                    className="border-gray-400/30 rounded-[0.250rem] form-select appearance-none block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding bg-no-repeat transition ease-in-out m-0 focus:text-gray-700 focus:bg-white focus:border-blue-600 focus:outline-none">
                       <option value="">{hisseGroupLoader}</option>
                       {hisse_groups.map((hisse_group) => (
                         <option key={hisse_group._id} value={hisse_group.hisse_group_title}>{hisse_group.hisse_group_title}</option>
                       ))}
                   </select>
-
             </label>
 
-              <Input value={kurban_kupe_no} title="Küpe No" name="kurban_kupe_no" onChange={onChange} errors={errors} />
-              <Input type={"number"} value={net_hisse_fiyat} title="Net Hisse Fiyatı" name="net_hisse_fiyat" onChange={onChange} errors={errors} />
+              <Input value={kurban_kupe_no} title="Küpe No" name="kurban_kupe_no" onChange={onChange} errors={errors} required autoFocus />
+              <Input type={"number"} value={net_hisse_fiyat} title="Net Hisse Fiyatı" name="net_hisse_fiyat" onChange={onChange} errors={errors} required />
               <Input type={"number"} value={kurban_weight} title="Kurban KG" name="kurban_weight" onChange={onChange} errors={errors} />
               <Textarea value={kurban_note} title="Kurban Not" name="kurban_note" onChange={onChange} errors={errors} />
               <Button className={"mt-2 w-full"} disabled={loading}>
-                {loading ? 'Oluşturuluyor' : 'Oluştur'}
+                {loading ? 'Oluşturuluyor...' : 'Oluştur'}
               </Button>
             </Card>    
           </form>

@@ -7,6 +7,7 @@ import axios from 'axios'
 
 import Header from './components/Header'
 import LeftMenu from './components/LeftMenu';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 function Kurum() {
 
@@ -34,9 +35,9 @@ function Kurum() {
         
         <main className="h-full pb-16 overflow-y-auto">
           <div className="container p-6 mx-auto grid dark:text-gray-200">
-     
-            <Outlet /> 
-       
+            <ErrorBoundary>
+              <Outlet />
+            </ErrorBoundary>
           </div>
         </main>
       </div>

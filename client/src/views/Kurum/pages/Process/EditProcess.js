@@ -43,7 +43,7 @@ function EditProcess() {
         const request = await MessageService.getAll({kurum_id: kurum._id});
         if(request.status === 200) {
           setMessageTemplates(request.data)
-          request.data.length === 0 ? setMessageTemplateHolder('Herhangi bir mesaj şablonu oluşturmadıız..') : setMessageTemplateHolder('Mesaj Şablonu Seç')
+          request.data.length === 0 ? setMessageTemplateHolder('Henüz mesaj şablonu oluşturmadınız.') : setMessageTemplateHolder('Mesaj Şablonu Seç')
         }
       }
       getMessageTemplate()

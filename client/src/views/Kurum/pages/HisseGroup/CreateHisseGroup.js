@@ -31,9 +31,6 @@ function CreateProcess() {
     /* */
     const createProcess = async (e) => {
       e.preventDefault();
-      
-      if(hisse_group_title === '') { return; } 
-
       setLoading(true)
 
       const data = {
@@ -62,9 +59,9 @@ function CreateProcess() {
                 </div>
 
               
-                <Input value={hisse_group_title} title="Hisse grubu" pholder={"Hisse grubu giriniz (bkz: 5.000 - 6.000)"} name="hisse_group_title" onChange={onChange} errors={errors} />
+                <Input value={hisse_group_title} title="Hisse grubu" pholder={"Hisse grubu giriniz (örn: 5.000 - 6.000)"} name="hisse_group_title" onChange={onChange} errors={errors} required autoFocus />
                 <Button className={"mt-2 w-full"} disabled={loading}>
-                  {loading ? 'Oluşturuluyor' : 'Oluştur'}
+                  {loading ? 'Oluşturuluyor...' : 'Oluştur'}
                 </Button>
               </Card>
             </form>

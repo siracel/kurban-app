@@ -112,17 +112,6 @@ const routers = (isUserAuth, isKurumAuth, isAdminAuth) => [
             },*/
         ]
     },
-    // project sayfası hem /kurum/project şeklinde olsun hem de kurum altında nested olmayıp onun templatine girmemiş oldu
-    {
-        path: '/kurum/project',
-        exact: true,
-        element: isKurumAuth ? <KurumProject /> : <Navigate to="/kurum/login" replace />,
-    },
-    {
-        path: '/kurum/create-project',
-        exact: false, // true olsa ne oluyor false olsa ne oluyor bak?
-        element: isKurumAuth ? <CreateProject /> :  <Navigate to="/kurum/login" replace />,
-    },
     {
         path: '/kurum/login',
         exact: false,
@@ -139,6 +128,16 @@ const routers = (isUserAuth, isKurumAuth, isAdminAuth) => [
         exact: true,
         element:  isKurumAuth ? <Kurum /> : <Navigate to="/kurum/login" replace />,
         children: [
+            {
+                path: 'project',
+                exact: true,
+                element: <KurumProject />,
+            },
+            {
+                path: 'create-project',
+                exact: false,
+                element: <CreateProject />,
+            },
             {
                 path: 'dashboard/:project_id',
                 exact: false,

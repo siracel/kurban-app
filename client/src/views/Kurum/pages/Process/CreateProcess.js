@@ -41,7 +41,7 @@ function CreateProcess() {
         const request = await MessageService.getAll({kurum_id: kurum._id});
         if(request.status === 200) {
           setMessageTemplates(request.data)
-          request.data.length === 0 ? setMessageTemplateHolder('Herhangi bir mesaj şablonu oluşturmadıız..') : setMessageTemplateHolder('Mesaj Şablonu Seç')
+          request.data.length === 0 ? setMessageTemplateHolder('Henüz mesaj şablonu oluşturmadınız.') : setMessageTemplateHolder('Mesaj Şablonu Seç')
         }
       }
       getMessageTemplate()
@@ -50,9 +50,6 @@ function CreateProcess() {
     /* */
     const createProcess = async (e) => {
       e.preventDefault();
-      
-      if(process_title === '') { return; } 
-
       setLoading(true)
 
       const data = {
@@ -81,7 +78,7 @@ function CreateProcess() {
                   <Title title={"İşlem Adımı Oluştur"}/>
                 </div>
 
-                <Input value={process_title} title="İşlem Başlığı" pholder="İşlem adımı" name="process_title" onChange={onChange} errors={errors} />
+                <Input value={process_title} title="İşlem Başlığı" pholder="İşlem adımı" name="process_title" onChange={onChange} errors={errors} required autoFocus />
 
                 <label className="block text-sm mb-4">
                   <span className={`text-gray-700 dark:text-gray-400`}>Mesaj Şablonu Bağla (İşlem Uygulandığında Otomatik Mesaj Gönderir):</span>

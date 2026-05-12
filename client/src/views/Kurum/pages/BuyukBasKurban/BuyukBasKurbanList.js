@@ -9,6 +9,7 @@ import { NavLink } from 'react-router-dom';
 import Modal from '../../../molecules/modal';
 import Side from '../../../molecules/side';
 import Noty from '../../../molecules/noty';
+import SMSPreview from '../../../molecules/smsPreview';
 import ProcessService from '../../../../services/ProcessService';
 import { ChatIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/outline'
 import Pagination from '../../components/Pagination';
@@ -33,6 +34,7 @@ function BuyukBasKurbanList({ project_id }) {
   const [isDeleteModal, setDeleteModal] = useState({isOpen: false});
   const [side, setSide] = useState({isOpen: false}); // for process
   const [sideForSMS, setSideForSMS] = useState({isOpen: false});
+  const [smsPreview, setSmsPreview] = useState({isOpen: false});
   const [noty, setNoty] = useState({isOpen: false});
 
   const [, updateState] = useState();
@@ -145,42 +147,60 @@ function BuyukBasKurbanList({ project_id }) {
     // message gönderimi sırasında side panelin Icon kısmında progress olabilir gönderim işlemi bitince side kapanır + noty mesaj verir
   }
 
-  const sideResultForSMS = async (result) => {
-    setSideForSMS({isOpen: true, title: "Mesajlar", veri: message_templates, kurban_no: kurban.kurban_no, state_loading: result._id, kurban_info_message: result.kurban_info_message})
-    
-    //console.log(kurban)
-
-    /*  
-      data.state_loading message._id ile set edilecek loading bar gösterilecek
-    */
-   
-    const sendSMS = await MessageService.send({
+  const sideResultForSMS = (result) => {
+    setSideForSMS({isOpen: false, title: side.title, state_loading: null})
+    setSmsPreview({
+      isOpen: true,
       message: result,
-      hissedarlar: kurban.hisse,
+      hissedars: kurban.hisse || [],
+      kurban: kurban,
       kurban_no: kurban.kurban_no,
-      kurban_code: kurban.uniq_kurban_code,
+    })
+  }
+
+  const confirmSendSMS = async () => {
+    const { message, kurban: targetKurban } = smsPreview
+    setSmsPreview({ isOpen: false })
+    setSideForSMS({isOpen: true, title: "Mesajlar", veri: message_templates, kurban_no: targetKurban.kurban_no, state_loading: message._id, kurban_info_message: message.kurban_info_message})
+
+    const sendSMS = await MessageService.send({
+      message,
+      hissedarlar: targetKurban.hisse,
+      kurban_no: targetKurban.kurban_no,
+      kurban_code: targetKurban.uniq_kurban_code,
       kurum_id: kurum._id,
-      kurban_info_message: result.kurban_info_message ? 1 : 0
+      kurban_info_message: message.kurban_info_message ? 1 : 0
     })
 
     setSideForSMS({isOpen: false, title: side.title, state_loading: null})
 
-    if(sendSMS.data.error) {
+    if (sendSMS?.data?.error) {
       setNoty({isOpen: true, title: "Hmmm Bir Saniye..", message: sendSMS.data.error, type: "error"})
     } else {
-      setNoty({isOpen: true, message: "Hissedarlara SMS başarı ile gönderilmiştir."})
+      setNoty({isOpen: true, message: "SMS başarıyla gönderildi."})
     }
 
     setTimeout(() => {
-      setNoty({isOpen: false, message: noty.message, title: noty.title, type:noty.type})
+      setNoty((prev) => ({ ...prev, isOpen: false }))
     }, 3500)
   }
 
-  //
+  const cancelSendSMS = () => {
+    setSmsPreview({ isOpen: false })
+  }
+
   const doluHisse = (e, hisse) => {
     if(hisse > 6) {
       e.preventDefault()
-      alert("Büyükbaş kurban kaydında hissedar adedi 7'i geçemez.")
+      setNoty({
+        isOpen: true,
+        title: "Hisse limiti doldu",
+        message: "Büyükbaş bir kurbanda en fazla 7 hissedar yer alabilir.",
+        type: "error"
+      })
+      setTimeout(() => {
+        setNoty((prev) => ({ ...prev, isOpen: false }))
+      }, 3500)
     }
   }
 
@@ -207,9 +227,10 @@ function BuyukBasKurbanList({ project_id }) {
           <Noty isOpen={noty.isOpen} message={noty.message} title={noty.title} type={noty.type} />
           <Side result={sideResultForProcess} data={side} kurbanProcess={kurban.process}/>
           <Side result={sideResultForSMS} data={sideForSMS}/>
+          <SMSPreview data={smsPreview} onConfirm={confirmSendSMS} onCancel={cancelSendSMS} />
           <Modal result={deleteKurban} data={isDeleteModal} />
 
-          <div className={`${loading || kurbans?.length === 0 ? "hidden" : ""} w-full overflow-x-auto`}>
+          <div className={`${loading || kurbans?.length === 0 ? "hidden" : ""} hidden md:block w-full overflow-x-auto`}>
             <table className="w-full whitespace-no-wrap ">
               <thead>
                 <tr className="text-sm font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50 dark:text-gray-400 dark:bg-gray-800" lang="tr" >
@@ -246,8 +267,8 @@ function BuyukBasKurbanList({ project_id }) {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className='text-[0.60rem] block'>{kurban?.kurban_hisse_group}</span>
-                      <span className=' text-6xl block'>{kurban.kurban_no}</span>
+                      <span className='text-[0.60rem] block text-gray-500'>{kurban?.kurban_hisse_group}</span>
+                      <span className='text-2xl font-semibold block leading-none'>{kurban.kurban_no}</span>
                     </td>
                     <td className="px-4 py-3 text-l min-w-full">
                       {kurban?.hisse?.map(item => (
@@ -270,41 +291,60 @@ function BuyukBasKurbanList({ project_id }) {
                                 onClick={(e) => doluHisse(e, kurban.hisse.length)} 
                                 state={{ kurban_id: kurban._id, kurban_no: kurban.kurban_no, hissedar_count: kurban.hisse.length }}
                                 className={`inline-flex items-center px-1.5 lg:px-2.5 py-1  lg:py-1.5 border border-transparent text-xs font-medium rounded ${kurban.hisse.length > 6 ? 'text-red-500 bg-red-200 ring-0 focus:ring-0 hover:bg-red-200' : ''} text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
-                                >Hissedar ekle+</NavLink>
+                                >Hissedar Ekle+</NavLink>
                     </td>
                     <td className="px-2 py-3 text-sm">
-                      <span onClick={() => {openProcessList(kurban)}} className="inline-block text-center cursor-pointer px-5 py-2 font-semibold leading-tight text-orange-700 bg-orange-100 rounded-full dark:text-white dark:bg-orange-600">
+                      <button
+                        type="button"
+                        onClick={() => {openProcessList(kurban)}}
+                        title="Durumu değiştir"
+                        aria-label="Kurban durumunu değiştir"
+                        className="inline-block text-center cursor-pointer px-5 py-2 font-semibold leading-tight text-orange-700 bg-orange-100 rounded-full dark:text-white dark:bg-orange-600 hover:bg-orange-200">
                         {processLoader === kurban._id ?  "..." : kurban?.process?.process_title}
-                      </span>
+                      </button>
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div className='flex items-center justify-center'>
-                        <div className="p-3 cursor-pointer text-blue-500 bg-blue-100 rounded-full dark:text-orange-100 dark:bg-blue-500">
+                        <button
+                          type="button"
+                          title="Kurban bilgileri"
+                          aria-label="Kurban bilgilerini görüntüle"
+                          className="p-3 cursor-pointer text-blue-500 bg-blue-100 rounded-full dark:text-orange-100 dark:bg-blue-500 hover:bg-blue-200">
                           <Icon name="info" />
-                        </div>
+                        </button>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div className='flex items-center justify-center'>
-                        <div onClick={() => openSendSMS(kurban)} className="p-3 cursor-pointer text-purple-500 bg-purple-100 rounded-full dark:text-green-100 dark:bg-green-500">
+                        <button
+                          type="button"
+                          onClick={() => openSendSMS(kurban)}
+                          title="SMS gönder"
+                          aria-label="Hissedarlara SMS gönder"
+                          className="p-3 cursor-pointer text-purple-500 bg-purple-100 rounded-full dark:text-green-100 dark:bg-green-500 hover:bg-purple-200">
                           <ChatIcon className='w-5 h-5' />
-                        </div>
+                        </button>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div className='flex items-center justify-center'>
-                        <NavLink to={"/kurum/edit-buyukbas"} state={kurban}>
-                          <div className="p-3 cursor-pointer text-orange-500 bg-orange-100 rounded-full dark:text-orange-100 dark:bg-orange-500">
+                        <NavLink to={"/kurum/edit-buyukbas"} state={kurban} title="Kurbanı düzenle" aria-label="Kurbanı düzenle">
+                          <div className="p-3 cursor-pointer text-orange-500 bg-orange-100 rounded-full dark:text-orange-100 dark:bg-orange-500 hover:bg-orange-200">
                               <Icon name="edit" />
                           </div>
                         </NavLink>
                       </div>
                     </td>
-                    <td className="  px-4 py-3 text-sm">
+                    <td className="px-4 py-3 text-sm">
                       <div className='flex items-center justify-center'>
-                        <div onClick={() => askModal(kurban)} className="p-3 cursor-pointer text-red-500 bg-red-100 rounded-full dark:text-orange-100 dark:bg-red-500">
+                        <button
+                          type="button"
+                          onClick={() => askModal(kurban)}
+                          title="Kurbanı sil"
+                          aria-label="Kurbanı sil"
+                          className="p-3 cursor-pointer text-red-500 bg-red-100 rounded-full dark:text-orange-100 dark:bg-red-500 hover:bg-red-200">
                           <Icon name="delete" />
-                        </div>
+                        </button>
                       </div>
                     </td>
                 </tr>)
@@ -312,6 +352,87 @@ function BuyukBasKurbanList({ project_id }) {
                 
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile card layout */}
+          <div className={`${loading || kurbans?.length === 0 ? "hidden" : ""} md:hidden divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800`}>
+            {kurbans && kurbans.map((kurban, index) => (
+              <div key={kurban._id} className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <span className="text-xs text-gray-500 block">{kurban?.kurban_hisse_group}</span>
+                    <span className="text-2xl font-semibold leading-none block">{kurban.kurban_no}</span>
+                    <span className="text-xs text-gray-400">#{index+1}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openProcessList(kurban)}
+                    title="Durumu değiştir"
+                    aria-label="Kurban durumunu değiştir"
+                    className="px-3 py-1.5 text-sm font-semibold text-orange-700 bg-orange-100 rounded-full dark:text-white dark:bg-orange-600 hover:bg-orange-200">
+                    {processLoader === kurban._id ? "..." : kurban?.process?.process_title}
+                  </button>
+                </div>
+
+                <div className="mb-3">
+                  <div className="text-xs text-gray-500 mb-1">Hissedarlar</div>
+                  {kurban?.hisse?.map(item => (
+                    item.kurban_id === kurban._id
+                      ? <p className="flex text-sm mb-1 text-gray-600 dark:text-gray-400" key={item._id}>
+                          <span className="flex-grow">{`${item.hissedar_full_name} - ${item.hissedar_gsm}`}</span>
+                          <span className={`text-pink-800 ${hisseDeleteLoading === item._id ? '' : 'hidden'}`}>
+                            <Icon name="spin_loader_1" size="5" className="animate-spin ml-2"/>
+                          </span>
+                          <button
+                            type="button"
+                            aria-label="Hisseyi sil"
+                            onClick={() => handleHisseDelete(item)}
+                            className={`text-pink-800 ${hisseDeleteLoading === item._id ? 'hidden' : ''}`}>
+                            <Icon name="cross" size="5" className="ml-2 cursor-pointer"/>
+                          </button>
+                        </p>
+                      : ""
+                  ))}
+                  <NavLink to={'/kurum/create-hisse'}
+                    onClick={(e) => doluHisse(e, kurban.hisse.length)}
+                    state={{ kurban_id: kurban._id, kurban_no: kurban.kurban_no, hissedar_count: kurban.hisse.length }}
+                    className={`inline-flex items-center mt-1 px-2.5 py-1.5 border border-transparent text-xs font-medium rounded ${kurban.hisse.length > 6 ? 'text-red-500 bg-red-200 hover:bg-red-200' : 'text-indigo-700 bg-indigo-100 hover:bg-indigo-200'}`}>
+                    Hissedar Ekle+
+                  </NavLink>
+                </div>
+
+                <div className="flex items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                  <button
+                    type="button"
+                    title="Kurban bilgileri"
+                    aria-label="Kurban bilgilerini görüntüle"
+                    className="p-2 cursor-pointer text-blue-500 bg-blue-100 rounded-full hover:bg-blue-200">
+                    <Icon name="info" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openSendSMS(kurban)}
+                    title="SMS gönder"
+                    aria-label="Hissedarlara SMS gönder"
+                    className="p-2 cursor-pointer text-purple-500 bg-purple-100 rounded-full hover:bg-purple-200">
+                    <ChatIcon className='w-5 h-5' />
+                  </button>
+                  <NavLink to={"/kurum/edit-buyukbas"} state={kurban} title="Kurbanı düzenle" aria-label="Kurbanı düzenle">
+                    <div className="p-2 cursor-pointer text-orange-500 bg-orange-100 rounded-full hover:bg-orange-200">
+                      <Icon name="edit" />
+                    </div>
+                  </NavLink>
+                  <button
+                    type="button"
+                    onClick={() => askModal(kurban)}
+                    title="Kurbanı sil"
+                    aria-label="Kurbanı sil"
+                    className="ml-auto p-2 cursor-pointer text-red-500 bg-red-100 rounded-full hover:bg-red-200">
+                    <Icon name="delete" />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Pagination */}

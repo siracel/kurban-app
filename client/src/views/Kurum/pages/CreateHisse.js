@@ -145,7 +145,7 @@ function CreateHisse() {
             <Card>
               <div className="flex items-center">
                 <Prev />
-                <Title title={`${location.state.kurban_no}.Kurban - Hisse Kayıt (${location.state.hissedar_count+1}/7)`} />
+                <Title title={`${location.state.kurban_no}. Kurban — Hisse Kaydı (${location.state.hissedar_count+1}/7)`} />
               </div>
 
               {/* <Input value={hissedar_full_name} title="*Hissedar tam ismi" name="hissedar_full_name" onChange={onChange} errors={errors} /> */}
@@ -186,12 +186,19 @@ function CreateHisse() {
               <Input value={referans_full_name} title="Referans tam ismi" name="referans_full_name" onChange={onChange} errors={errors} />
               <Input type="number" min={0} value={referans_gsm} title="Referans GSM" name="referans_gsm" onChange={onChange} errors={errors} />
               <Textarea value={hissedar_note} title="Hissedar not" name="hissedar_note" onChange={onChange} errors={errors} />
-              <p>
-                <input type="checkbox" id="vekalet" value={is_vekalet}/><label htmlFor='vekalet'> Vekaleti alınmıştır</label>
+              <p className="mt-2">
+                <input
+                  type="checkbox"
+                  id="vekalet"
+                  name="is_vekalet"
+                  checked={is_vekalet}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, is_vekalet: e.target.checked }))}
+                />
+                <label htmlFor='vekalet' className="ml-2 cursor-pointer select-none"> Vekaleti alınmıştır</label>
               </p>
 
               <Button className={"mt-2 w-full"} disabled={loading}>
-                {loading ? 'Oluşturuluyor' : 'Oluştur'}
+                {loading ? 'Oluşturuluyor...' : 'Oluştur'}
               </Button>
             </Card>    
           </form>

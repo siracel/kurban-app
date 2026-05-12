@@ -32,9 +32,6 @@ function CreateProcess() {
     /* */
     const createMessageTemplate = async (e) => {
       e.preventDefault();
-      
-      if(message_title === '' || message_content === '') { return; } 
-
       setLoading(true)
 
       const data = {
@@ -64,8 +61,8 @@ function CreateProcess() {
                 </div>
 
               
-                <Input value={message_title} title="Mesaj Başlığı" name="message_title" onChange={onChange} errors={errors} />
-                <Textarea value={message_content} title="Mesaj İçeriği" name="message_content" onChange={onChange} errors={errors} />
+                <Input value={message_title} title="Mesaj Başlığı" name="message_title" onChange={onChange} errors={errors} required autoFocus />
+                <Textarea value={message_content} title="Mesaj İçeriği" name="message_content" onChange={onChange} errors={errors} required rows={5} />
                 <Button className={"mt-2 w-full"} disabled={loading}>
                   {loading ? 'Oluşturuluyor..' : 'Oluştur'}
                 </Button>
