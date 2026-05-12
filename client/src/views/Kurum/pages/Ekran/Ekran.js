@@ -6,9 +6,8 @@ import Title from "../../../components/Title";
 import {useSelector} from "react-redux"
 import DynamicScreen from "./DynamicScreen"
 
-import Slider from 'react-carousel-responsive';
-import 'react-carousel-responsive/dist/styles.css';
 import "./ekran.css"
+const Slider = ({ children, ...props }) => <div {...props}>{children}</div>;
 
 function Ekran() {
 

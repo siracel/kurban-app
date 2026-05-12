@@ -14,6 +14,9 @@
 /client/public/uploads
 /config/config.env
 
+# Claude Code local settings
+.claude/
+
 # misc
 .DS_Store
 .env.local
