@@ -1,39 +1,30 @@
 import { NavLink } from 'react-router-dom'
-import {useDispatch, useSelector} from "react-redux"
-import axios from 'axios';
-import ProjectList from './ProjectList';
-import { useEffect } from 'react';
-import {setActiveProjectID} from "../../../../store/reducers/kurum.dashboard"
-import Header from '../../components/Header'
+import { useDispatch } from "react-redux"
+import { useEffect } from 'react'
+import ProjectList from './ProjectList'
+import { setActiveProjectID } from "../../../../store/reducers/kurum.dashboard"
 
 function Project() {
-    const dispatch = useDispatch()
-    const isKurumAuth = useSelector((state) => state.auth.isKurum)
-    const kurum = useSelector((state) => state.auth.kurum)
-    if(isKurumAuth) axios.defaults.headers.common['Authorization'] = `Bearer ${kurum.token}`;
+  const dispatch = useDispatch()
 
-    useEffect(() => {
-      dispatch(setActiveProjectID(""))
-    }, [])
-    
-    return (
-        <>
-        <Header />
-        <main className="h-full pb-16 overflow-y-auto ">
-          <div className="container p-6 mx-auto grid">
-     
-            <h1 className="text-center text-xl mt-4 font-semibold ">{ kurum.kurum_name } - Projelerim</h1>
+  useEffect(() => {
+    dispatch(setActiveProjectID(""))
+  }, [])
 
-            <div className='flex justify-end'>
-              <NavLink to={'/kurum/create-project'} className="my-4">Proje Oluştur+</NavLink>
-            </div>
-            
-            <ProjectList />
+  return (
+    <>
+      <div className="flex items-center justify-end mt-2 mb-4">
+        <NavLink
+          to={'/kurum/create-project'}
+          className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700"
+        >
+          Proje Oluştur+
+        </NavLink>
+      </div>
 
-          </div>
-        </main>
-        </>
-    );
-  }
-  
-  export default Project;
+      <ProjectList />
+    </>
+  );
+}
+
+export default Project;
