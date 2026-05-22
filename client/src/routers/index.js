@@ -4,7 +4,7 @@ import GoogleAuth from '../utils/GoogleAuth'
 
 /* */
 import FrontSide from '../views/FrontSide/FrontSideLayout'
-import Home from '../views/FrontSide/pages/Home'
+import ComingSoon from '../views/FrontSide/ComingSoon'
 import Login from '../views/FrontSide/pages/Login'
 import Register from '../views/FrontSide/pages/Register'
 import Sepet from '../views/FrontSide/pages/Sepet'
@@ -75,41 +75,32 @@ const routers = (isUserAuth, isKurumAuth, isAdminAuth) => [
         element: <KurbanOnKayit />
     },
     /* */
+    // Kök sayfa: satış vitrini yerine sade "Çok Yakında" ekranı (Nav/Footer yok)
     {
         path: '/',
         exact: true,
-        element: <FrontSide />, // main path içinde outlet var child routeları orada gösterir
+        element: <ComingSoon />,
+    },
+    // Eski FrontSide satış alt sayfaları (kullanılmıyor ama doğrudan URL ile erişilebilir kalsın)
+    {
+        element: <FrontSide />,
         children: [
             {
-                path: '/',
-                exact: false,
-                element: <Home />,
-            },
-            {
-                path: '/login',
-                exact: false,
+                path: 'login',
                 element:  !isUserAuth ? <Login /> : <Navigate to="/" replace />,
             },
             {
-                path: '/register',
-                exact: false,
+                path: 'register',
                 element: !isUserAuth ? <Register /> : <Navigate to="/" replace />,
             },
             {
-                path: '/sepet',
-                exact: false,
-                auth: true,
+                path: 'sepet',
                 element: isUserAuth ? <Sepet /> : <Navigate to="/" replace />,
             },
             {
-                path: '/kurban-sorgula',
+                path: 'kurban-sorgula',
                 element: <KurbanSorgula />
             },
-            /*{
-                path: '*',
-                exact: false,
-                element: <Home />,
-            },*/
         ]
     },
     {
