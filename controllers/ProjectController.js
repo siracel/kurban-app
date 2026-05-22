@@ -19,10 +19,20 @@ const findProject = async (req,res) => {
 }
 
 const update = async (req,res) => {
-    const id = { _id: req.params.id }
-    const filter = { name: 'Alex' };
-    const update = { age: '19' };
-    let doc = await Project.findOneAndUpdate(filter, update);
+    try {
+        const { project_name } = req.body
+        if (!project_name || !project_name.trim()) {
+            return res.status(200).json({ error: 'Proje adı boş olamaz.' })
+        }
+        const doc = await Project.findOneAndUpdate(
+            { _id: req.params.id },
+            { project_name: project_name.trim() },
+            { new: true }
+        );
+        return res.status(200).json(doc);
+    } catch (error) {
+        return res.status(500).json({ error: error.message })
+    }
 }
 
 const create = async (req,res) => {
