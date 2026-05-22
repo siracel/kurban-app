@@ -1,8 +1,6 @@
 import MessageService from "../../../../services/MessageService";
 import { useEffect, useState } from "react";
-import Card from "../../../components/Card"
-import Prev from "../../../components/Prev"
-import Title from "../../../components/Title"
+import PageHeader from "../../../components/PageHeader"
 import {Icon} from "../../../../utils/SVG";
 import { NavLink } from "react-router-dom";
 import {useSelector} from "react-redux"
@@ -55,60 +53,46 @@ function MessageTemplate() {
   }
     return (
       <>
-          <Card>              
-          <div className="flex items-center justify-start">
-            <Prev />
-            <Title title={"Mesaj Şablonları"}/>
-            <NavLink to={"/kurum/create-message-template"} className="text-purple-500 flex-grow text-right">
-                Mesaj Şablonu Oluştur+
-            </NavLink>
-          </div>
+        <PageHeader
+          title="Mesaj Şablonları"
+          actionLabel="Mesaj Şablonu Oluştur+"
+          actionTo="/kurum/create-message-template"
+        />
 
-        
-          <ul className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {messageTemplates.map((message) => (
-            <li key={message._id} className="col-span-1 bg-white rounded-lg shadow divide-y divide-gray-200">
-              <div className="w-full flex items-center justify-between p-6 space-x-6">
-                <div className="flex-1 truncate">
-                  <div className="flex items-center space-x-3">
-                    <h3 className="text-gray-900 text-sm font-medium truncate">{message.message_title}</h3>
-                    <span className="flex-shrink-0 inline-block px-2 py-0.5 text-green-800 text-xs font-medium bg-green-100 rounded-full">
-                      ?
-                    </span>
-                  </div>
-                  <p className="mt-1 text-gray-500 text-sm truncate">{message.message_content}</p>
+            <li key={message._id} className="col-span-1 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col">
+              <div className="flex-1 p-5">
+                <div className="flex items-start gap-2">
+                  <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-900/30 text-purple-600 flex items-center justify-center">
+                    <Icon name="message_template" size={5} />
+                  </span>
+                  <h3 className="text-gray-900 dark:text-gray-100 text-sm font-semibold pt-1.5 truncate">{message.message_title}</h3>
                 </div>
+                <p className="mt-3 text-gray-500 dark:text-gray-400 text-sm" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{message.message_content}</p>
               </div>
-              <div>
-                <div className="-mt-px flex divide-x divide-gray-200">
-                  <div className="w-0 flex-1 flex">
-                    <NavLink state={message} to={"/kurum/edit-message-template"} className="relative w-0 flex-1 inline-flex items-center justify-center py-4 text-sm text-gray-700 font-medium border border-transparent rounded-br-lg hover:text-gray-500">
-                      <Icon name="edit" size="5" className="text-gray-400" />
-                      <span className="ml-3">Düzenle</span>
-                    </NavLink>
-                  </div>
-                  <div className="-ml-px w-0 flex-1 flex" onClick={() => askModal(message)}>
-                    <button type="button" className="relative w-0 flex-1 inline-flex items-center justify-center py-4 text-sm text-gray-700 font-medium border border-transparent rounded-br-lg hover:text-gray-500">
-                      <Icon name="delete" size="5" className={`${deleteLoading === message._id ? 'hidden' : ''} text-gray-400`}  />
-                      <Icon name="spin_loader_1" size="5" className={`${deleteLoading === message._id ? '' : 'hidden'} text-gray-400`}  />
-                      <span className="ml-3">Sil</span>
-                    </button>
-                  </div>
-                </div>
+              <div className="flex divide-x divide-gray-100 dark:divide-gray-700 border-t border-gray-100 dark:border-gray-700">
+                <NavLink state={message} to={"/kurum/edit-message-template"} className="flex-1 inline-flex items-center justify-center gap-2 py-3 text-sm text-gray-600 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700/40 rounded-bl-xl">
+                  <Icon name="edit" size="5" />
+                  Düzenle
+                </NavLink>
+                <button type="button" onClick={() => askModal(message)} className="flex-1 inline-flex items-center justify-center gap-2 py-3 text-sm text-red-600 font-medium hover:bg-red-50 dark:hover:bg-red-900/20 rounded-br-xl">
+                  <Icon name="delete" size="5" className={`${deleteLoading === message._id ? 'hidden' : ''}`} />
+                  <Icon name="spin_loader_1" size="5" className={`${deleteLoading === message._id ? 'animate-spin' : 'hidden'}`} />
+                  Sil
+                </button>
               </div>
             </li>
           ))}
         </ul>
-            
-          <div className={` ${messageTemplates.length === 0 && !loading ? "" : "hidden"} py-10`}>
-            <span className='text-gray-400 block text-center'>Henüz bir Mesaj Şablonu oluşturmadınız..</span>
-          </div>
 
-          <Loading loading={loading} />
+        <div className={`${messageTemplates.length === 0 && !loading ? "" : "hidden"} py-12`}>
+          <span className='text-gray-400 block text-center'>Henüz bir mesaj şablonu oluşturmadınız.</span>
+        </div>
 
-          <Modal result={modalResult} data={isModal} />
-        
-        </Card>
+        <Loading loading={loading} />
+
+        <Modal result={modalResult} data={isModal} />
       </>
     );
 }

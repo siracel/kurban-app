@@ -82,94 +82,78 @@ function ProcessList() {
   
     return (
       <>
-            <div className="w-full overflow-hidden rounded-lg shadow-xs border-[1px] border-gray-400/20">
-              <div className={`${loading || processes?.length === 0 ? "hidden" : ""} w-full overflow-x-auto`}>
-                <table className="w-full whitespace-no-wrap  ">
-                  <thead>
-                    <tr className="text-sm font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50 dark:text-gray-400 dark:bg-gray-800" lang="tr" >
-                      <th className="px-4 py-3">#</th>
-                      <th className="px-4 py-3">İşlem Başlığı</th>
-                      <th className="px-4 py-3">Mesaj Şablonu</th>
-                      <th className="px-4 py-3">İşlem Sırası</th>
-                      <th className="px-4 py-3 text-center" colSpan={2}>İşlemler</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y dark:divide-gray-700 dark:bg-gray-800">
-                  {processes && processes?.map((process, index) =>  (
-                      <tr className="text-gray-700 dark:text-gray-400" key={process._id}>
-                        <td className="px-4 py-1">
-                          <div className="flex items-center text-sm">
-                            <div className="relative hidden w-8 h-8 mr-3 rounded-full md:block">
-                              <div
-                                className="absolute inset-0 rounded-full shadow-inner"
-                                aria-hidden="true"
-                              ></div>
-                            </div>
-                            <div>
-                              <span>{index+1}</span>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-1 text-l">
-                          <span>{process?.process_title}</span>
-                        </td>
-                        <td className="px-4 py-1 text-l">
-                          <span>{process.message_template ? process.message_template.message_title : '-'}</span>
-                        </td>
-                        <td className="px-4 inline-flex flex-col py-1 text-sm">
-                          
-                            <p onClick={() => changeOrder(process, 'up')} className='cursor-pointer'>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                              </svg>
-                            </p>
-                            <p onClick={() => changeOrder(process, 'down')} className='cursor-pointer'>
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                              </svg>
-                            </p>
-                        
-                        </td>
-                        <td className={`${process?.process_title === "KAYIT" ? "hidden" : ""} px-4 py-1 text-sm`}>
-                          <div className='flex items-center justify-center'>
-                            <NavLink to={"/kurum/edit-process"} state={process}>
-                              <div className="p-2 cursor-pointer text-orange-500 bg-orange-100 rounded-full dark:text-orange-100 dark:bg-orange-500">
-                                  <Icon name="edit" />
-                              </div>
-                            </NavLink>
-                          </div>
-                        </td>
-                        <td className={`${process?.process_title === "KAYIT" ? "hidden" : ""} px-4 py-1 text-sm`}>
-                          <div className='flex items-center justify-center'>
-                            <div onClick={() => askModal(process)} className="p-2 cursor-pointer text-red-500 bg-red-100 rounded-full dark:text-orange-100 dark:bg-red-500">
-                              <span className={`${deleteLoading === process._id ? "" : "hidden"}`}>
-                                <Icon name={"spin_loader_1"} className="animate-spin" />
-                              </span>
+        <div className={`${loading || processes?.length === 0 ? "hidden" : ""} w-full overflow-x-auto`}>
+          <table className="w-full whitespace-no-wrap">
+            <thead>
+              <tr className="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50 dark:text-gray-400 dark:bg-gray-800/50" lang="tr">
+                <th className="px-5 py-3">#</th>
+                <th className="px-5 py-3">İşlem Başlığı</th>
+                <th className="px-5 py-3">Mesaj Şablonu</th>
+                <th className="px-5 py-3 text-center">Sıra</th>
+                <th className="px-5 py-3 text-center" colSpan={2}>İşlemler</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700 dark:bg-gray-800">
+            {processes && processes?.map((process, index) =>  (
+                <tr className="text-gray-700 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/40" key={process._id}>
+                  <td className="px-5 py-3 text-sm text-gray-400">{index+1}</td>
+                  <td className="px-5 py-3 font-medium text-gray-800 dark:text-gray-200">{process?.process_title}</td>
+                  <td className="px-5 py-3 text-sm">{process.message_template ? process.message_template.message_title : '—'}</td>
+                  <td className="px-5 py-3">
+                    <div className="flex items-center justify-center gap-1 text-gray-400">
+                      <button type="button" onClick={() => changeOrder(process, 'up')} aria-label="Yukarı taşı" className="p-1 rounded hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+                        </svg>
+                      </button>
+                      <button type="button" onClick={() => changeOrder(process, 'down')} aria-label="Aşağı taşı" className="p-1 rounded hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                  <td className={`${process?.process_title === "KAYIT" ? "invisible" : ""} py-3 text-sm w-16`}>
+                    <div className='flex items-center justify-center'>
+                      <NavLink to={"/kurum/edit-process"} state={process} title="Düzenle" aria-label="İşlem adımını düzenle">
+                        <div className="p-2.5 cursor-pointer text-orange-500 bg-orange-100 rounded-full hover:bg-orange-200 dark:text-orange-100 dark:bg-orange-500">
+                          <Icon name="edit" size={5} />
+                        </div>
+                      </NavLink>
+                    </div>
+                  </td>
+                  <td className={`${process?.process_title === "KAYIT" ? "invisible" : ""} py-3 pr-5 text-sm w-16`}>
+                    <div className='flex items-center justify-center'>
+                      <button
+                        type="button"
+                        onClick={() => askModal(process)}
+                        title="Sil"
+                        aria-label="İşlem adımını sil"
+                        className="p-2.5 cursor-pointer text-red-500 bg-red-100 rounded-full hover:bg-red-200 dark:text-orange-100 dark:bg-red-500">
+                        <span className={`${deleteLoading === process._id ? "" : "hidden"}`}>
+                          <Icon name={"spin_loader_1"} size={5} className="animate-spin" />
+                        </span>
+                        <span className={`${deleteLoading === process._id ? "hidden" : ""}`}>
+                          <Icon name={"delete"} size={5} />
+                        </span>
+                      </button>
+                    </div>
+                  </td>
+              </tr>)
+            )}
+            </tbody>
+          </table>
+        </div>
 
-                              <span className={`cursor-pointer ${deleteLoading === process._id ? "hidden" : ""}`}>
-                                <Icon name={"delete"} />
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-                    </tr>)
-                  )}
-                    
-                  </tbody>
-                </table>
-              </div>
+        <div className={`${loading ? "" : "hidden"} py-10`}>
+          <Loading loading={loading} />
+        </div>
 
-              <div className={` ${loading ? "" : "hidden"} py-10`}>
-                <Loading loading={loading} />
-              </div>
-              
-              
-              <div className={` ${processes?.length === 0 && !loading ? "" : "hidden"} py-10`}>
-                <span className='text-gray-400 block text-center'>Henüz bir işlem adımı oluşturmadınız..</span>
-              </div>
-            </div>
-            
-            <Modal result={modalResult} data={isModal} />
+        <div className={`${processes?.length === 0 && !loading ? "" : "hidden"} py-12`}>
+          <span className='text-gray-400 block text-center'>Henüz bir işlem adımı oluşturmadınız.</span>
+        </div>
+
+        <Modal result={modalResult} data={isModal} />
       </>
     );
 }

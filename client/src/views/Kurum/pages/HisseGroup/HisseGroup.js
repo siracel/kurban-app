@@ -1,34 +1,21 @@
-import { useEffect } from "react";
-import { NavLink } from "react-router-dom";
 import HisseGroupList from "./HisseGroupList";
 import Card from "../../../components/Card";
-import Prev from "../../../components/Prev";
-import Title from "../../../components/Title";
- 
-function Process() {
+import PageHeader from "../../../components/PageHeader";
 
-
-  useEffect(() => {
-    
-  }, [])
-  
+function HisseGroup() {
     return (
       <>
-          <Card>
-            <div className="flex items-center justify-start mb-2">
-              <Prev />
-              <Title title={"Hisse Grupları"}/>
-              <div className="flex flex-grow justify-end">
-                <NavLink to={"/kurum/create-hisse-grup"} className="text-purple-500 text-right">
-                  Hisse Grubu Oluştur+
-                </NavLink>
-              </div>
-            </div>
+        <PageHeader
+          title="Hisse Grupları"
+          actionLabel="Hisse Grubu Oluştur+"
+          actionTo="/kurum/create-hisse-grup"
+        />
 
-            <HisseGroupList />
-          </Card>
+        <Card className="!p-0 overflow-hidden">
+          <HisseGroupList />
+        </Card>
       </>
     );
 }
 
-export default Process;
+export default HisseGroup;
