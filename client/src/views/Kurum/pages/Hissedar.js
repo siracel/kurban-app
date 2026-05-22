@@ -50,11 +50,13 @@ function Hissedar() {
   const filtered = useMemo(() => {
     const s = q.toLocaleLowerCase('tr')
     const sd = digitsOnly(q)
-    return hissedars.filter(h => {
-      const nameMatch = (h.hissedar_full_name || "").toLocaleLowerCase('tr').includes(s)
-      const phoneMatch = sd && digitsOnly(h.hissedar_gsm).includes(sd)
-      return nameMatch || phoneMatch
-    })
+    return hissedars
+      .filter(h => {
+        const nameMatch = (h.hissedar_full_name || "").toLocaleLowerCase('tr').includes(s)
+        const phoneMatch = sd && digitsOnly(h.hissedar_gsm).includes(sd)
+        return nameMatch || phoneMatch
+      })
+      .sort((a, b) => (a.hissedar_full_name || "").localeCompare(b.hissedar_full_name || "", 'tr', { sensitivity: 'base' }))
   }, [hissedars, q])
 
   return (

@@ -41,16 +41,26 @@ export default function HissedarForm({ hissedars = [], loading, errors = [], onS
   const onChange = (e) => setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   const onChangeGsm = (e) => setFormData((prev) => ({ ...prev, [e.target.name]: formatGsmInput(e.target.value) }))
 
+  const MAX_SUGGESTIONS = 8
+
+  const computeSuggestions = (value) => {
+    const normalized = (value || "").toLocaleLowerCase('tr').trim()
+    if (!normalized) return []
+    return hissedars
+      .filter((h) => (h.hissedar_full_name || "").toLocaleLowerCase('tr').includes(normalized))
+      .slice(0, MAX_SUGGESTIONS)
+  }
+
   const onChangeHissedarName = (e) => {
     const value = e.target.value
     setFormData((prev) => ({ ...prev, hissedar_full_name: value }))
-    const normalized = value.toLocaleLowerCase('tr')
-    setSuggestions(hissedars.filter((h) => (h.hissedar_full_name || "").toLocaleLowerCase('tr').includes(normalized)))
+    setSuggestions(computeSuggestions(value))
     setShowList(true)
   }
 
   const selectSuggestion = (h) => {
     setFormData((prev) => ({ ...prev, hissedar_full_name: h.hissedar_full_name, hissedar_gsm: formatGsmInput(h.hissedar_gsm) }))
+    setSuggestions([])
     setShowList(false)
   }
 
@@ -81,22 +91,23 @@ export default function HissedarForm({ hissedars = [], loading, errors = [], onS
             title="Hissedar Adı Soyadı"
             name="hissedar_full_name"
             onChange={onChangeHissedarName}
-            onFocus={() => { setSuggestions(hissedars); setShowList(true) }}
+            onFocus={() => { setSuggestions(computeSuggestions(hissedar_full_name)); setShowList(true) }}
             onBlur={() => setTimeout(() => setShowList(false), 150)}
             autoComplete="off"
             errors={errors}
             required
           />
           {showList && suggestions.length > 0 && (
-            <ul className="absolute z-30 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-56 overflow-auto -mt-2">
+            <ul className="absolute left-0 right-0 z-30 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-56 overflow-auto -mt-3">
+              <li className="px-3 py-1.5 text-[0.7rem] uppercase tracking-wide text-gray-400 border-b border-gray-100 dark:border-gray-700">Kayıtlı hissedarlar</li>
               {suggestions.map((h) => (
                 <li
                   key={h._id}
-                  className="px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer flex items-center justify-between"
+                  className="px-4 py-2.5 hover:bg-purple-50 dark:hover:bg-gray-700 cursor-pointer flex items-center justify-between gap-3"
                   onMouseDown={() => selectSuggestion(h)}
                 >
-                  <span className="font-medium text-gray-800 dark:text-gray-200">{h.hissedar_full_name}</span>
-                  <span className="text-xs text-gray-400">{formatGsm(h.hissedar_gsm)}</span>
+                  <span className="font-medium text-gray-800 dark:text-gray-200 truncate">{h.hissedar_full_name}</span>
+                  <span className="text-xs text-gray-400 flex-shrink-0">{formatGsm(h.hissedar_gsm)}</span>
                 </li>
               ))}
             </ul>
