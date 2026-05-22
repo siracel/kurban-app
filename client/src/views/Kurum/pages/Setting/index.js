@@ -1,45 +1,44 @@
-import { useEffect, useState } from "react";
-
-import "./setting.scss"
+import { useState } from "react";
+import PageHeader from "../../../components/PageHeader"
 import AccountSettings from "./components/AccountSettings"
 import GeneralSettings from "./components/GeneralSettings"
 import MessageSettings from "./components/MessageSettings"
-import { useSearchParams } from "react-router-dom";
-export default function Index () {
-    const [activeTab, setActiveTab] = useState("tab1");
 
-    const handleTab = (tab) => {
-        setActiveTab(tab)
-    }
+const tabs = [
+  { id: "tab1", label: "Hesap Ayarları" },
+  { id: "tab2", label: "Genel Ayarlar" },
+  { id: "tab3", label: "Mesaj Ayarları" },
+]
 
-    const [searchParams] = useSearchParams();
-    useEffect(() => {
-        if(searchParams.get("tab")) {
-           
-        }
-    }, [searchParams])
+export default function Index() {
+  const [activeTab, setActiveTab] = useState("tab1")
 
-    return (
-        <div className="flex flex-col md:flex-row">
-            <div className="flex flex-row md:flex-col setting-menu gap-2 mb-4 md:mb-0 md:mr-2">
-                <div className={`${ activeTab === "tab1" ? "active" : "" } card`} onClick={() => handleTab("tab1")}>
-                    <span>Hesap Ayarları</span>
-                </div>
-                <div className={`${ activeTab === "tab2" ? "active" : "" } card`} onClick={() => handleTab("tab2")}>
-                    <span>Genel Ayarlar</span>
-                </div>
-                <div className={`${ activeTab === "tab3" ? "active" : "" } card`} onClick={() => handleTab("tab3")}>
-                    <span>Mesaj Ayarları</span>
-                </div>
-            </div>
-            <div className="setting-content flex-1">
-                {
-                    activeTab === "tab1" ? <AccountSettings handleTab={handleTab} className={`tab1 px-7 py-5`} /> 
-                    : (activeTab === "tab2")  ? <GeneralSettings handleTab={handleTab} className={`tab2 px-7 py-5`} />
-                    : (activeTab === "tab3")  ? <MessageSettings  handleTab={handleTab} className={`tab3 px-7 py-5`} />
-                    : null
-                }   
-            </div>
-        </div>
-    )
+  return (
+    <>
+      <PageHeader title="Ayarlar" />
+
+      <div className="flex flex-wrap gap-2 mb-5">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setActiveTab(t.id)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === t.id
+                ? "bg-purple-600 text-white shadow-sm"
+                : "bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div>
+        {activeTab === "tab1" && <AccountSettings />}
+        {activeTab === "tab2" && <GeneralSettings />}
+        {activeTab === "tab3" && <MessageSettings />}
+      </div>
+    </>
+  )
 }

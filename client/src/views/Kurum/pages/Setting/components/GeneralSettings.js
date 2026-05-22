@@ -3,95 +3,82 @@ import { useSelector } from "react-redux"
 import Input from "../../../../components/Input"
 import Button from "../../../../components/Button"
 import Card from "../../../../components/Card"
+import Noty from "../../../../molecules/noty"
 import KurumService from '../../../../../services/KurumService';
 
-// sayfa yüklenince ilgili kurum whatsapp bilgileri çekilecek ve inputa set edilecek
-export default function GeneralSettings(props) {
+export default function GeneralSettings() {
     const kurum = useSelector((state) => state.auth.kurum)
     const [loading, setLoading] = useState(false);
     const [errors, setError] = useState([]);
-
-    useEffect(() => {
-        const getKurum = async () => {
-            const response = await KurumService.get(kurum._id);
-            if(response.status === 200 && !response.data.error) {
-                setFormData({
-                    whatsapp_appkey: response.data.whatsapp_appkey,
-                    whatsapp_authkey: response.data.whatsapp_authkey
-                })
-            } else if(response.data.error) {
-                console.log(response.data.error)
-            }
-        }
-        getKurum()
-    }, [])
+    const [noty, setNoty] = useState({ isOpen: false })
 
     const [formData, setFormData] = useState({
         whatsapp_appkey: '',
         whatsapp_authkey: ''
     })
-
     const { whatsapp_appkey, whatsapp_authkey } = formData
 
+    useEffect(() => {
+        const getKurum = async () => {
+            try {
+                const response = await KurumService.get(kurum._id);
+                if (response.status === 200 && !response.data.error) {
+                    setFormData({
+                        whatsapp_appkey: response.data.whatsapp_appkey || '',
+                        whatsapp_authkey: response.data.whatsapp_authkey || ''
+                    })
+                }
+            } catch (_) { /* sessiz */ }
+        }
+        getKurum()
+    }, [])
+
     const onChange = (e) => {
-        setFormData((prevState) => ({
-        ...prevState,
-        [e.target.name]: e.target.value
-        }))
+        setFormData((prevState) => ({ ...prevState, [e.target.name]: e.target.value }))
     }
 
     const updateKurumWp = async (e) => {
         e.preventDefault();
-        let isError = false
-        
-        Object.keys(formData).forEach(element => {
-            if(formData[element] === "") {
-            isError = true
-            setError({[element]: "Değer boş geçilemez"})
-            }
-        });
-
-        if(isError) {return}
-
+        setError([])
         setLoading(true)
-
-        const data = { _id: kurum._id, ...formData }
-        
-        const response = await KurumService.update(data);
-        
-        setLoading(false)
-
-        if(response.status === 200 && !response.data.error) {
-            console.log(response.data)
-        } else if(response.data.error) {
-            console.log(response.data.error)
+        try {
+            const response = await KurumService.update({ _id: kurum._id, ...formData });
+            if (response.status === 200 && !response.data.error) {
+                setNoty({ isOpen: true, title: "Kaydedildi", message: "WhatsApp ayarları güncellendi." })
+                setTimeout(() => setNoty((p) => ({ ...p, isOpen: false })), 2500)
+            } else {
+                setError({ key: response.data.error || "Ayarlar güncellenemedi." })
+            }
+        } catch (_) {
+            setError({ key: "Bir hata oluştu. Lütfen tekrar deneyin." })
         }
+        setLoading(false)
     }
 
     return (
-            <>
-                <section className={`card p-4 ${props.className} `}>
-                
-                <form onSubmit={updateKurumWp}>
-                  <Card>              
-                    <div className="flex flex-col mb-4">
-                      <h4 className={`text-xl font-semibold`}>Whatsapp Ayarları</h4>
-                      <span className="text-xs text-gray-600 dark:text-gray-400">
-                        <a href="https://wpsenderpro.com/register/2" target="_blank" className="text-blue-600 hover:text-blue-700 dark:text-blue-500 dark:hover:text-blue-400" rel="noreferrer">wpsenderpro.com</a>
-                        adresinden My Apps kısmından Appkey ve Authkey alabilirsiniz.
-                      </span>
-                    </div>
-    
-                    <Input value={whatsapp_appkey} title="Whatsapp APPKEY" pholder="Whatsapp APPKEY" name="whatsapp_appkey" onChange={onChange} errors={errors} />
-                    <Input value={whatsapp_authkey} title="Whatsapp AUTHKEY" pholder="Whatsapp AUTHKEY" name="whatsapp_authkey" onChange={onChange} errors={errors} />
-                    
-                    <Button className={"mt-2 w-full"} disabled={loading}>
-                      {loading ? 'Kayıt Yapılıyor...' : 'Kaydet'}
-                    </Button>
-                  </Card>
-                </form>
+        <>
+            <Noty isOpen={noty.isOpen} title={noty.title} message={noty.message} />
 
-                </section>
-            </>
-        );
+            <form onSubmit={updateKurumWp}>
+                <Card className="!p-6">
+                    <h3 className="text-base font-semibold text-gray-800 dark:text-gray-100 mb-1">WhatsApp Ayarları</h3>
+                    <p className="text-sm text-gray-400 mb-5">
+                        <a href="https://wpsenderpro.com/register/2" target="_blank" rel="noreferrer" className="text-purple-600 hover:text-purple-700">wpsenderpro.com</a>
+                        {" "}adresinde <strong>My Apps</strong> bölümünden Appkey ve Authkey alabilirsiniz.
+                    </p>
+
+                    {errors.key && (
+                        <div className="mb-4 p-3 rounded-lg bg-pink-50 border border-pink-200 text-sm text-pink-700">{errors.key}</div>
+                    )}
+
+                    <Input value={whatsapp_appkey} title="WhatsApp APPKEY" pholder="APPKEY" name="whatsapp_appkey" onChange={onChange} errors={errors} />
+                    <Input value={whatsapp_authkey} title="WhatsApp AUTHKEY" pholder="AUTHKEY" name="whatsapp_authkey" onChange={onChange} errors={errors} />
+
+                    <Button className="mt-2 w-full sm:w-auto" disabled={loading}>
+                        {loading ? 'Kaydediliyor...' : 'Kaydet'}
+                    </Button>
+                </Card>
+            </form>
+        </>
+    );
 }
