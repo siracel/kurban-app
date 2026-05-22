@@ -22,6 +22,8 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import "./BuyukBasKurbanList.css"
 import Search from './Search';
+import { formatGsm } from '../../../../utils/gsm';
+import AddHissedarModal from '../../components/AddHissedarModal';
 
 // Sürüklenebilir tablo satırı — sürükleme tutamacı listeners ile gelir
 function SortableRow({ id, disabled, children }) {
@@ -96,6 +98,7 @@ function BuyukBasKurbanList({ project_id }) {
   const [smsPreview, setSmsPreview] = useState({isOpen: false});
   const [noty, setNoty] = useState({isOpen: false});
   const [searchActive, setSearchActive] = useState(false);
+  const [addHissedarKurban, setAddHissedarKurban] = useState(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -103,15 +106,16 @@ function BuyukBasKurbanList({ project_id }) {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  useEffect(() => {
-    const getKurbanAll = async () => {
-      const request = await KurbanService.getAll({kurum_id: kurum._id, project_id: project_id});
-      if(request.status === 200) {
-        setLoading(false)
-        setKurban(request.data)
-        setKurbanAtStart(request.data)
-      }
+  const getKurbanAll = async () => {
+    const request = await KurbanService.getAll({kurum_id: kurum._id, project_id: project_id});
+    if(request.status === 200) {
+      setLoading(false)
+      setKurban(request.data)
+      setKurbanAtStart(request.data)
     }
+  }
+
+  useEffect(() => {
     const getProcess = async () => {
       const request = await ProcessService.getAll({kurum_id: kurum._id});
       if(request.status === 200) {
@@ -252,19 +256,26 @@ function BuyukBasKurbanList({ project_id }) {
     setSmsPreview({ isOpen: false })
   }
 
-  const doluHisse = (e, hisse) => {
-    if(hisse > 6) {
-      e.preventDefault()
+  // Hissedar ekle: 7 limitini kontrol et, uygunsa modalı aç (sayfadan ayrılmadan)
+  const openAddHissedar = (kurban) => {
+    if ((kurban.hisse?.length || 0) > 6) {
       setNoty({
         isOpen: true,
         title: "Hisse limiti doldu",
         message: "Büyükbaş bir kurbanda en fazla 7 hissedar yer alabilir.",
         type: "error"
       })
-      setTimeout(() => {
-        setNoty((prev) => ({ ...prev, isOpen: false }))
-      }, 3500)
+      setTimeout(() => setNoty((prev) => ({ ...prev, isOpen: false })), 3500)
+      return
     }
+    setAddHissedarKurban(kurban)
+  }
+
+  const onHissedarAdded = async () => {
+    setAddHissedarKurban(null)
+    await getKurbanAll()
+    setNoty({ isOpen: true, title: "Eklendi", message: "Hissedar eklendi." })
+    setTimeout(() => setNoty((prev) => ({ ...prev, isOpen: false })), 2500)
   }
 
   const search = (e) => {
@@ -311,6 +322,13 @@ function BuyukBasKurbanList({ project_id }) {
           <Side result={sideResultForProcess} data={side} kurbanProcess={kurban.process}/>
           <Side result={sideResultForSMS} data={sideForSMS}/>
           <SMSPreview data={smsPreview} onConfirm={confirmSendSMS} onCancel={cancelSendSMS} />
+          <AddHissedarModal
+            kurban={addHissedarKurban}
+            projectId={project_id}
+            kurumId={kurum._id}
+            onClose={() => setAddHissedarKurban(null)}
+            onAdded={onHissedarAdded}
+          />
           <Modal result={deleteKurban} data={isDeleteModal} />
 
           <div className={`${loading || kurbans?.length === 0 ? "hidden" : ""} hidden md:block w-full overflow-x-auto`}>
@@ -347,7 +365,7 @@ function BuyukBasKurbanList({ project_id }) {
                         item.kurban_id === kurban._id
                         ? <p className="flex md:justify-start text-sm mb-2 mt-2 text-gray-600 dark:text-gray-400 flex-shrink-0" key={item._id}>
                             
-                            <span>{`${item.hissedar_full_name} - ${item.hissedar_gsm}`}</span>
+                            <span>{`${item.hissedar_full_name} - ${formatGsm(item.hissedar_gsm)}`}</span>
                             
                             <span className={` text-pink-800 ${hisseDeleteLoading === item._id ? '' : 'hidden'}`}>
                               <Icon name="spin_loader_1" size="5" className="animate-spin ml-2"/>
@@ -359,11 +377,11 @@ function BuyukBasKurbanList({ project_id }) {
                         : ""
                       ))}
           
-                      <NavLink to={'/kurum/create-hisse'}
-                                onClick={(e) => doluHisse(e, kurban.hisse.length)} 
-                                state={{ kurban_id: kurban._id, kurban_no: kurban.kurban_no, hissedar_count: kurban.hisse.length }}
-                                className={`inline-flex items-center px-1.5 lg:px-2.5 py-1  lg:py-1.5 border border-transparent text-xs font-medium rounded ${kurban.hisse.length > 6 ? 'text-red-500 bg-red-200 ring-0 focus:ring-0 hover:bg-red-200' : ''} text-indigo-700 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
-                                >Hissedar Ekle+</NavLink>
+                      <button
+                        type="button"
+                        onClick={() => openAddHissedar(kurban)}
+                        className={`inline-flex items-center px-1.5 lg:px-2.5 py-1 lg:py-1.5 border border-transparent text-xs font-medium rounded ${kurban.hisse.length > 6 ? 'text-red-500 bg-red-200 hover:bg-red-200' : 'text-indigo-700 bg-indigo-100 hover:bg-indigo-200'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500`}
+                      >Hissedar Ekle+</button>
                     </td>
                     <td className="px-2 py-3 text-sm">
                       <button
@@ -379,8 +397,9 @@ function BuyukBasKurbanList({ project_id }) {
                       <div className='flex items-center justify-center'>
                         <button
                           type="button"
-                          title="Kurban bilgileri"
-                          aria-label="Kurban bilgilerini görüntüle"
+                          onClick={() => window.open(`/kurban-info/${kurban.uniq_kurban_code}`, '_blank', 'noopener')}
+                          title="Kurban bilgi sayfası"
+                          aria-label="Kurban bilgi sayfasını yeni sekmede aç"
                           className="p-3 cursor-pointer text-blue-500 bg-blue-100 rounded-full dark:text-orange-100 dark:bg-blue-500 hover:bg-blue-200">
                           <Icon name="info" />
                         </button>
@@ -459,7 +478,7 @@ function BuyukBasKurbanList({ project_id }) {
                   {kurban?.hisse?.map(item => (
                     item.kurban_id === kurban._id
                       ? <p className="flex text-sm mb-1 text-gray-600 dark:text-gray-400" key={item._id}>
-                          <span className="flex-grow">{`${item.hissedar_full_name} - ${item.hissedar_gsm}`}</span>
+                          <span className="flex-grow">{`${item.hissedar_full_name} - ${formatGsm(item.hissedar_gsm)}`}</span>
                           <span className={`text-pink-800 ${hisseDeleteLoading === item._id ? '' : 'hidden'}`}>
                             <Icon name="spin_loader_1" size="5" className="animate-spin ml-2"/>
                           </span>
@@ -473,19 +492,20 @@ function BuyukBasKurbanList({ project_id }) {
                         </p>
                       : ""
                   ))}
-                  <NavLink to={'/kurum/create-hisse'}
-                    onClick={(e) => doluHisse(e, kurban.hisse.length)}
-                    state={{ kurban_id: kurban._id, kurban_no: kurban.kurban_no, hissedar_count: kurban.hisse.length }}
+                  <button
+                    type="button"
+                    onClick={() => openAddHissedar(kurban)}
                     className={`inline-flex items-center mt-1 px-2.5 py-1.5 border border-transparent text-xs font-medium rounded ${kurban.hisse.length > 6 ? 'text-red-500 bg-red-200 hover:bg-red-200' : 'text-indigo-700 bg-indigo-100 hover:bg-indigo-200'}`}>
                     Hissedar Ekle+
-                  </NavLink>
+                  </button>
                 </div>
 
                 <div className="flex items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
                   <button
                     type="button"
-                    title="Kurban bilgileri"
-                    aria-label="Kurban bilgilerini görüntüle"
+                    onClick={() => window.open(`/kurban-info/${kurban.uniq_kurban_code}`, '_blank', 'noopener')}
+                    title="Kurban bilgi sayfası"
+                    aria-label="Kurban bilgi sayfasını yeni sekmede aç"
                     className="p-2 cursor-pointer text-blue-500 bg-blue-100 rounded-full hover:bg-blue-200">
                     <Icon name="info" />
                   </button>
