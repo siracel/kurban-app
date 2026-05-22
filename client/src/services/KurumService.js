@@ -12,11 +12,6 @@ class KurumService {
     get(id) {
         return axios.get(`/kurum/${id}`);
     }
-
-    onKayitMail(data) {
-        console.log(data);
-        return axios.post(`/kurum/onkayit/${data.kurum_id}`, data);
-    }
 }
 
 export default new KurumService();

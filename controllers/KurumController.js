@@ -3,7 +3,6 @@ import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken'
 import asyncHandler from 'express-async-handler'
 import Process from '../models/Process.js';
-import nodemailer from "nodemailer"
 
 // user objesinden password veya istenilen ögeler çıkarılmış şekilde return et
 const kurumData = (kurum) => {
@@ -176,7 +175,7 @@ const find = async (req,res) => {
    /**
     * ID ile Collection'dan spesifik field'ları çekmek için
     */
-    const kurumSpecial = await Kurum.findById({ _id: req.params.id }).exec(); // _id, full_name, kurum_name key'li obj döner
+    const kurumSpecial = await Kurum.findById({ _id: req.params.id }).select('-password').exec();
     res.status(200).json(kurumSpecial)
     /**
      * var mı? varsa _id döner 
@@ -191,7 +190,9 @@ const find = async (req,res) => {
 
 const update = async (req,res) => {
     const id = { _id: req.params.id }
-    let doc = await Kurum.findOneAndUpdate(id, req.body, {new: true});
+    // _id immutable; password ve is_verify bu genel update'ten asla değişmemeli
+    const { _id, password, is_verify, ...fields } = req.body
+    let doc = await Kurum.findOneAndUpdate(id, fields, {new: true});
     res.status(200).json(doc);
 }
 const _delete = async (req,res) =>{
@@ -207,36 +208,4 @@ const generateToken = (id) => {
     return jwt.sign({id}, process.env.JWT_SECRET, {expiresIn: '30d'}) // buradaki json key id olduğu için decode ederken de id olmalı
 }
 
-const onKayit = (req,res) => {
-    const {kurum_id} = req.params
-    console.log(kurum_id);
-    console.log(req.body);
-    // res.status(200).json(response)
-
-    const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-            user: "hesap.akkus@gmail.com",
-            pass: "dnbqgkcxgfnlkstk"
-        }
-    });
-
-    const mailOptions = {
-        from: "hesap.akkus@gmail.com",
-        to: req.body.email,
-        subject: "Kurban",
-        html: `İsim: ${req.body.full_name} </br> GSM: ${req.body.phone}`
-    };
-
-    transporter.sendMail(mailOptions, function(error, info){
-        if(error){
-            console.log(error);
-        } else{
-            console.log("Email sent: " + info.response);
-            res.status(200).json({response: true})
-        }
-    });
-
-}
-
-export {login, kurums, register, find, update, _delete, onKayit}
+export {login, kurums, register, find, update, _delete}

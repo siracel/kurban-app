@@ -26,7 +26,6 @@ import EditMessageTemplate from '../views/Kurum/pages/MessageTemplate/EditMessag
 import Process from '../views/Kurum/pages/Process/Process'
 import CreateProcess from '../views/Kurum/pages/Process/CreateProcess'
 import EditProcess from '../views/Kurum/pages/Process/EditProcess'
-import KucukbasKurban from '../views/Kurum/pages/KucukbasKurban'
 import HisseGroup from '../views/Kurum/pages/HisseGroup/HisseGroup'
 import EditHisseGroup from '../views/Kurum/pages/HisseGroup/EditHisseGroup'
 import CreateHisseGroup from '../views/Kurum/pages/HisseGroup/CreateHisseGroup'
@@ -53,7 +52,6 @@ import AdminError404 from '../views/Admin/pages/E404'
 
 import SomeComponent from '../views/SomeComponent'
 
-import KurbanOnKayit from '../views/Kurum/pages/KurbanOnKayit/Index'
 
  
 // bu Navigate 'e state prop olarak userLocation() hook'u vermen gerekebilir. redirect ile alakalı bug olursa
@@ -69,10 +67,6 @@ const routers = (isUserAuth, isKurumAuth, isAdminAuth) => [
     {
         path: '/kurban-info/:kurban_code',
         element: <KurbanInfo />
-    },
-    {
-        path: '/onkayit/:kurum_id',
-        element: <KurbanOnKayit />
     },
     /* */
     // Kök sayfa: satış vitrini yerine sade "Çok Yakında" ekranı (Nav/Footer yok)
@@ -199,11 +193,6 @@ const routers = (isUserAuth, isKurumAuth, isAdminAuth) => [
                 path: 'create-hisse',
                 exact: false,
                 element: <CreateHisse />
-            },
-            {
-                path: 'kucukbas-kurban/:project_id',
-                exact: false,
-                element: <KucukbasKurban />
             },
             {
                 path: 'ekran-management',
