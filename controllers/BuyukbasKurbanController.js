@@ -45,16 +45,33 @@ const findForEkran = asyncHandler( async (req,res) => {
 })
 
 const findAll = asyncHandler( async (req,res) => {
-    const buyukbas = await Buyukbas.find({project_id: req.params.project_id}).populate("hisse").populate("process").sort('-createdAt')
+    const buyukbas = await Buyukbas.find({project_id: req.params.project_id}).populate("hisse").populate("process").sort('kurban_no')
     return res.status(200).json(buyukbas);
 })
+
+// Sürükle-bırak sıralama: gelen _id dizisine göre kurban_no'yu 1..N olarak yeniden atar
+const reorderKurbans = async (req, res) => {
+    try {
+        const { items } = req.body // yeni sıradaki _id dizisi
+        if (!Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ error: "Geçersiz sıralama verisi" })
+        }
+        const ops = items.map((id, idx) => ({
+            updateOne: { filter: { _id: id }, update: { kurban_no: idx + 1 } }
+        }))
+        await Buyukbas.bulkWrite(ops)
+        return res.status(200).json({ ok: true })
+    } catch (error) {
+        return res.status(500).json({ error: error.message })
+    }
+}
 
 
 // bu method aslında 3-4 farklı metoda bölünmeliydi :(
 const update = async (req,res) => {
     // net hisse fiyat number gelmeli yoksa hata veriyor
     const id = { _id: req.params.id }
-    const { _id, message_template, process, kurban_kupe_no, net_hisse_fiyat, kurban_weight, kurban_note, kurban_hisse_group, youtube_embed } = req.body
+    const { _id, message_template, process, kurban_kupe_no, net_hisse_fiyat, kurban_weight, kurban_note, kurban_hisse_group, youtube_embed, vidyome_embed } = req.body
 
     /* Process/İşlem adımına bağlı mesaj gönderme */
     let is_message_send = 0
@@ -112,10 +129,22 @@ const update = async (req,res) => {
     }
     
 
-    const doc = await Buyukbas.findOneAndUpdate(id, req.body, {new: true});
+    // _id immutable bir alan; req.body içinde gelirse Mongo hata fırlatır.
+    // Bu yüzden sadece düzenlenebilir alanları açıkça güncelliyoruz.
+    const updateFields = {
+        kurban_kupe_no,
+        net_hisse_fiyat,
+        kurban_weight,
+        kurban_note,
+        kurban_hisse_group,
+        youtube_embed,
+        vidyome_embed,
+    }
+    // undefined alanları gönderme (mevcut değeri silmemek için)
+    Object.keys(updateFields).forEach(k => updateFields[k] === undefined && delete updateFields[k])
+
+    const doc = await Buyukbas.findOneAndUpdate(id, updateFields, {new: true});
     return res.status(200).json(doc);
-    
-   
 }
 
 const create = async (req,res) => {
@@ -227,4 +256,4 @@ const _delete = async (req,res) =>{
 }
 
 
-export { create, findSingleBuyukbas, findAll, findForEkran, update, _delete, uploadKurbanVideo, uploadKurbanImage, changeKurbanProcess }
+export { create, findSingleBuyukbas, findAll, findForEkran, update, _delete, uploadKurbanVideo, uploadKurbanImage, changeKurbanProcess, reorderKurbans }

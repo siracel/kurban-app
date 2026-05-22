@@ -6,9 +6,12 @@ import AWS from 'aws-sdk'
 import progress from 'progress-stream'
 const router = express.Router()
 
-import { create, update, _delete, uploadKurbanVideo, uploadKurbanImage, changeKurbanProcess } from '../controllers/BuyukbasKurbanController.js'
+import { create, update, _delete, uploadKurbanVideo, uploadKurbanImage, changeKurbanProcess, reorderKurbans } from '../controllers/BuyukbasKurbanController.js'
 
 router.post('/:project_id', create)
+
+// /:id'den ÖNCE tanımlanmalı, yoksa "reorder" id olarak yakalanır
+router.put('/reorder', reorderKurbans)
 
 router.put('/:id', update)
 
