@@ -1,52 +1,38 @@
-import { useSelector } from 'react-redux'
-import { NavLink, useLocation } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux'
+import { useLocation } from 'react-router-dom';
 import LeftMenuContent from './LeftMenuContent';
-import {useDispatch} from "react-redux"
-import {setMobileMenu} from  "../../../store/reducers/admin"
+import { setMobileMenu } from "../../../store/reducers/admin"
 import { useEffect } from 'react';
 
 function LeftMenu() {
     const mobileMenu = useSelector(state => state.admin.mobileMenu)
-    
     const dispatch = useDispatch()
     const location = useLocation()
-    
 
     useEffect(() => {
-      //const currentPath = location.pathname;
-      //const searchParams = new URLSearchParams(location.search);
       dispatch(setMobileMenu(false))
     }, [location]);
-    
-    
+
     return (
       <>
         {/* Desktop */}
-        <div className="z-20 hidden w-64 overflow-y-auto bg-white dark:bg-gray-800 md:block flex-shrink-0">
-          <div className="py-4 text-gray-500 dark:text-gray-400">
-            <span className="ml-6 text-md block font-bold text-gray-800 dark:text-gray-200">
-              <NavLink to={`/admin`}>
-                Admin Dashboard
-              </NavLink>
-            </span>
-
+        <aside className="z-20 hidden md:flex flex-col w-64 flex-shrink-0 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100 dark:border-gray-700">
+            <span className="font-bold text-gray-800 dark:text-gray-100">Kurban App</span>
+            <span className="block text-xs text-gray-400">Yönetim Paneli</span>
+          </div>
+          <div className="flex-1 overflow-y-auto py-4">
             <LeftMenuContent />
           </div>
-      </div>
+        </aside>
 
-      {/* Mobile */}
-      <div className={`${mobileMenu ? "" : "hidden"} fixed inset-y-0 z-20 flex-shrink-0 w-64 mt-16 overflow-y-auto bg-white dark:bg-gray-800 md:hidden`}>
-        <div className="py-4 text-gray-500 dark:text-gray-400">
-          {/*
-          <span className="ml-6 text-lg font-bold text-gray-800 dark:text-gray-200">
-            Kurban
-          </span>
-          */}
-
-          <LeftMenuContent />
+        {/* Mobile */}
+        <div className={`${mobileMenu ? "" : "hidden"} fixed inset-y-0 left-0 z-20 w-64 mt-16 overflow-y-auto bg-white dark:bg-gray-800 shadow-xl md:hidden`}>
+          <div className="py-4">
+            <LeftMenuContent />
+          </div>
         </div>
-      </div>
-</>
+      </>
     );
 }
 

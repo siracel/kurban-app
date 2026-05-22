@@ -1,75 +1,44 @@
 import { NavLink } from 'react-router-dom'
-import { useEffect, useState } from "react";
-import { Icon } from '../../../utils/SVG';
-import { adminLogout } from '../../../store/reducers/admin';
-import { useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux'
+import { HomeIcon, ChatIcon, LogoutIcon } from '@heroicons/react/outline'
+import { adminLogout } from '../../../store/reducers/admin'
 
 const menu = [
-    {
-        _id: 1,
-        path: "/admin",
-        svg_title: "",
-        menu_title: "Dashboard"
-    },
-    {
-        _id: 2,
-        path: "/admin/message-api",
-        svg_title: "message_template",
-        menu_title: "Mesaj API"
-    }
+    { _id: 1, path: "/admin", icon: HomeIcon, title: "Kurumlar", end: true },
+    { _id: 2, path: "/admin/message-api", icon: ChatIcon, title: "Mesaj API", end: false },
 ]
 
-export default function LeftMenuContent () {
-    const [menus, setMenus] = useState([]);
+export default function LeftMenuContent() {
     const dispatch = useDispatch()
 
-    const logout = () => {
-        dispatch(adminLogout())
-      }
-
-    useEffect(() => {
-        setMenus(menu)
-    }, [])
+    const linkClass = ({ isActive }) =>
+        `flex items-center gap-3 mx-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+            isActive
+                ? 'bg-purple-600 text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+        }`
 
     return (
-    <>
-        <ul className="mt-6">
-            {menus && menus.map((menu) =>  (
-                    <li key={menu._id}>
-                        <NavLink to={menu.path} className={({ isActive }) => isActive ? "relative px-6 py-3 block text-indigo-600" : "relative px-6 py-3 block"} end={true}>
-                            <span
-                                className="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 dark:hover:text-gray-200"
-                                >
-                                <Icon name={menu.svg_title ? menu.svg_title : 'home'} />
-                                <span className="ml-3">{menu.menu_title}</span>
-                            </span>
-                        </NavLink>
-                    </li>
-                )
-                    
-              )}
+        <div className="flex flex-col h-full">
+            <nav className="flex-1 space-y-1">
+                {menu.map((item) => (
+                    <NavLink key={item._id} to={item.path} end={item.end} className={linkClass}>
+                        <item.icon className="w-5 h-5" />
+                        <span>{item.title}</span>
+                    </NavLink>
+                ))}
+            </nav>
 
-                <li className="cursor-pointer" onClick={logout}>
-                    <p className="relative px-6 py-3 block text-black relative px-6 py-3 block" >
-                        <span
-                            className="inline-flex items-center w-full text-sm font-semibold transition-colors duration-150 dark:hover:text-gray-200"
-                            >
-                            <svg
-                                className="w-5 h-5 mr- stroke-2"
-                                aria-hidden="true"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                >
-                                <path
-                                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                                ></path>
-                            </svg>
-                            <span className="ml-3">Logout</span>
-                        </span>
-                    </p>
-                </li>
-        </ul>
-    </>
-    );
+            <div className="px-3 pt-4 mt-4 border-t border-gray-100 dark:border-gray-700">
+                <button
+                    type="button"
+                    onClick={() => dispatch(adminLogout())}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                >
+                    <LogoutIcon className="w-5 h-5" />
+                    <span>Çıkış</span>
+                </button>
+            </div>
+        </div>
+    )
 }

@@ -53,6 +53,9 @@ const login = async (req,res) =>{
         });
        
         if(kurum && (await bcrypt.compare(password, kurum.password))) {
+            if(!kurum.is_verify) {
+                return res.status(200).json({error: 'Hesabınız henüz onaylanmadı. Lütfen yöneticinizle iletişime geçin.'})
+            }
             res.status(200).json(kurumData(kurum))
         } else {
             res.status(200).json({error: 'Girilen bilgiler ile eşleşen bir kullanıcı bulunamadı'})
