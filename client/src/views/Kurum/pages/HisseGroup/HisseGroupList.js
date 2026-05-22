@@ -1,13 +1,17 @@
 import Loading from '../../../components/Loading';
 import HisseGroupService from "../../../../services/HisseGroupService";
 import { useEffect, useState } from "react";
-import {useSelector} from "react-redux"
+import { useDispatch } from "react-redux"
+import { useParams } from "react-router-dom"
 import {Icon} from "../../../../utils/SVG";
 import Modal from '../../../molecules/modal';
 import {NavLink} from 'react-router-dom'
+import { setActiveProjectID } from "../../../../store/reducers/kurum.dashboard"
 
 function ProcessList() {
-  const active_project_id = useSelector(state => state.kurum.active_project_id)
+  // project_id'yi URL'den al (redux'a güvenme — yenileme/doğrudan link de çalışsın)
+  const { project_id } = useParams()
+  const dispatch = useDispatch()
 
   const [hisse_groups, setHisseGroup] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,16 +21,19 @@ function ProcessList() {
   const [isModal, setModal] = useState({isOpen: false, title: '', message: ''});
 
   useEffect(() => {
+    // "Hisse Grubu Oluştur" gibi yerler redux'taki active_project_id'yi kullanıyor
+    if (project_id) dispatch(setActiveProjectID(project_id))
+
     const getHisseGroup = async () => {
-      const request = await HisseGroupService.getByProject({project_id: active_project_id});
+      const request = await HisseGroupService.getByProject({ project_id });
       if(request.status === 200) {
         setLoading(false)
         setHisseGroup(request.data)
       }
     }
-    getHisseGroup()
-    
-  }, [])
+    if (project_id) getHisseGroup()
+    else setLoading(false)
+  }, [project_id])
 
   /* Delete Process */
   const askModal = (item) => {

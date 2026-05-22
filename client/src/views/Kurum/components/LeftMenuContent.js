@@ -1,13 +1,11 @@
 import { NavLink } from 'react-router-dom'
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
-import { CalendarIcon, ExternalLinkIcon } from '@heroicons/react/outline'
 import MenuService from "../../../services/MenuService"
 import { Icon } from '../../../utils/SVG'
 
 export default function LeftMenuContent () {
     const project_id = useSelector(state => state.kurum.active_project_id)
-    const kurum = useSelector(state => state.auth.kurum)
     const [menus, setMenus] = useState([])
 
     useEffect(() => {
@@ -25,37 +23,32 @@ export default function LeftMenuContent () {
                 : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
         }`
 
+    const disabledClass = "flex items-center gap-3 mx-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-300 dark:text-gray-600 cursor-not-allowed"
+
     return (
-        <div className="flex flex-col h-full">
-            <nav className="flex-1 space-y-1">
-                {menus && menus.map((menu) => (
+        <nav className="space-y-1">
+            {menus && menus.map((menu) => {
+                // Proje-bağlı öğeler (örn. Hisse Grupları) aktif proje seçili değilken devre dışı
+                const needsProject = !!menu.project_id
+                if (needsProject && !project_id) {
+                    return (
+                        <span key={menu._id} className={disabledClass} title="Önce bir proje seçin">
+                            <Icon name={menu.svg_title} size={5} />
+                            <span>{menu.menu_title}</span>
+                        </span>
+                    )
+                }
+                return (
                     <NavLink
                         key={menu._id}
-                        to={`${menu.path}${menu.project_id ? "/" + project_id : ""}`}
+                        to={`${menu.path}${needsProject ? "/" + project_id : ""}`}
                         className={linkClass}
                     >
                         <Icon name={menu.svg_title} size={5} />
                         <span>{menu.menu_title}</span>
                     </NavLink>
-                ))}
-            </nav>
-
-            <div className="px-3 pt-4 mt-4 border-t border-gray-100 dark:border-gray-700 space-y-1">
-                <NavLink to={'/kurum/project'} className={linkClass}>
-                    <CalendarIcon className="w-5 h-5" />
-                    <span>Projeler</span>
-                </NavLink>
-
-                <a
-                    href={`${window.location.origin}/onkayit/${kurum._id}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-3 mx-0 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                    <ExternalLinkIcon className="w-5 h-5" />
-                    <span>Ön Kayıt Sayfası</span>
-                </a>
-            </div>
-        </div>
+                )
+            })}
+        </nav>
     )
 }
