@@ -2,7 +2,7 @@ import Loading from '../../../components/Loading';
 import KurbanService from "../../../../services/BKurbanService";
 import HisseService from "../../../../services/HisseService";
 import MessageService from "../../../../services/MessageService";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {useSelector} from "react-redux"
 import {Icon} from "../../../../utils/SVG";
 import { NavLink } from 'react-router-dom';
@@ -11,10 +11,69 @@ import Side from '../../../molecules/side';
 import Noty from '../../../molecules/noty';
 import SMSPreview from '../../../molecules/smsPreview';
 import ProcessService from '../../../../services/ProcessService';
-import { ChatIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/outline'
+import { ChatIcon } from '@heroicons/react/outline'
 import Pagination from '../../components/Pagination';
+import {
+  DndContext, closestCenter, PointerSensor, TouchSensor, KeyboardSensor, useSensor, useSensors
+} from '@dnd-kit/core'
+import {
+  SortableContext, verticalListSortingStrategy, useSortable, arrayMove, sortableKeyboardCoordinates
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import "./BuyukBasKurbanList.css"
 import Search from './Search';
+
+// Sürüklenebilir tablo satırı — sürükleme tutamacı listeners ile gelir
+function SortableRow({ id, disabled, children }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, disabled })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    position: isDragging ? 'relative' : undefined,
+    zIndex: isDragging ? 20 : undefined,
+  }
+  return (
+    <tr ref={setNodeRef} style={style} {...attributes} className="text-gray-700 dark:text-gray-400 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/40">
+      {children({ listeners })}
+    </tr>
+  )
+}
+
+// Sürüklenebilir mobil kart
+function SortableCard({ id, disabled, children }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id, disabled })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    zIndex: isDragging ? 20 : undefined,
+  }
+  return (
+    <div ref={setNodeRef} style={style} {...attributes}>
+      {children({ listeners })}
+    </div>
+  )
+}
+
+// Sürükleme tutamacı ikonu
+function DragHandle({ listeners, className = "" }) {
+  return (
+    <button
+      type="button"
+      {...listeners}
+      aria-label="Sürükleyerek sırala"
+      title="Sürükleyerek sırala"
+      className={`touch-none cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 p-1 ${className}`}
+    >
+      <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <circle cx="7" cy="5" r="1.5" /><circle cx="13" cy="5" r="1.5" />
+        <circle cx="7" cy="10" r="1.5" /><circle cx="13" cy="10" r="1.5" />
+        <circle cx="7" cy="15" r="1.5" /><circle cx="13" cy="15" r="1.5" />
+      </svg>
+    </button>
+  )
+}
 
 function BuyukBasKurbanList({ project_id }) {
     
@@ -36,9 +95,13 @@ function BuyukBasKurbanList({ project_id }) {
   const [sideForSMS, setSideForSMS] = useState({isOpen: false});
   const [smsPreview, setSmsPreview] = useState({isOpen: false});
   const [noty, setNoty] = useState({isOpen: false});
+  const [searchActive, setSearchActive] = useState(false);
 
-  const [, updateState] = useState();
-  const forceUpdate = useCallback(() => updateState({}), []);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   useEffect(() => {
     const getKurbanAll = async () => {
@@ -204,21 +267,41 @@ function BuyukBasKurbanList({ project_id }) {
     }
   }
 
-  const setReverse = () => {
-    setKurban(kurbans.reverse())
-    forceUpdate();
-  }
-
   const search = (e) => {
-    console.log(e.target.value)
-    if(e.target.value.length > 0) {
-      setKurban(kurbans.filter(kurban => kurban.hisse.some(hissedar => 
-          hissedar.hissedar_full_name.toLowerCase().match(new RegExp(e.target.value, 'g')))
+    const value = e.target.value
+    if(value.length > 0) {
+      setSearchActive(true)
+      setKurban(kurbanAtStart.filter(kurban => kurban.hisse.some(hissedar =>
+          hissedar.hissedar_full_name.toLowerCase().match(new RegExp(value.toLowerCase(), 'g')))
         ))
     } else {
+      setSearchActive(false)
       setKurban(kurbanAtStart)
     }
   }
+
+  // Sürükle-bırak ile sıralama: kurban_no'yu 1..N olarak yeniden numaralandırır ve kaydeder
+  const handleDragEnd = async (event) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const oldIndex = kurbans.findIndex(k => k._id === active.id)
+    const newIndex = kurbans.findIndex(k => k._id === over.id)
+    if (oldIndex < 0 || newIndex < 0) return
+
+    const reordered = arrayMove(kurbans, oldIndex, newIndex).map((k, i) => ({ ...k, kurban_no: i + 1 }))
+    setKurban(reordered)
+    setKurbanAtStart(reordered)
+
+    try {
+      await KurbanService.reorder(reordered.map(k => k._id))
+    } catch (err) {
+      setNoty({ isOpen: true, title: "Hata", message: "Sıralama kaydedilemedi. Tekrar deneyin.", type: "error" })
+      setTimeout(() => setNoty(prev => ({ ...prev, isOpen: false })), 3000)
+    }
+  }
+
+  const sortableIds = kurbans.map(k => k._id)
     return (
      <>
         <Search className={` mt-2 mb-5 `} search={search} />
@@ -233,37 +316,26 @@ function BuyukBasKurbanList({ project_id }) {
           <div className={`${loading || kurbans?.length === 0 ? "hidden" : ""} hidden md:block w-full overflow-x-auto`}>
             <table className="w-full whitespace-no-wrap ">
               <thead>
-                <tr className="text-sm font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50 dark:text-gray-400 dark:bg-gray-800" lang="tr" >
-                  <th className="px-4 py-3">#</th>
-                  <th className="px-4 py-3 flex items-center cursor-pointer" onClick={setReverse}>
-                    <span>Kurban NO</span>
-                    <div className='flex flex-col items-center first-letter ml-3 kurban-list-up-down-icons'>
-                      <ChevronUpIcon />
-                      <ChevronDownIcon />
-                    </div>
-                  </th>
+                <tr className="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50 dark:text-gray-400 dark:bg-gray-800/50" lang="tr" >
+                  <th className="px-2 py-3 w-10"></th>
+                  <th className="px-4 py-3">Kurban No</th>
                   <th className="px-4 py-3">Hissedarlar</th>
                   <th className="px-4 py-3">Durum</th>
                   <th className="px-4 py-3 text-center" colSpan={4}>İşlemler</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y dark:divide-gray-700 dark:bg-gray-800">
-              {kurbans && kurbans?.map((kurban, index) =>  (
-                  <tr className="text-gray-700 dark:text-gray-400" key={kurban._id}>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center text-sm">
-                        <div className="relative hidden w-8 h-8 mr-3 rounded-full md:block">
-                          <div
-                            className="absolute inset-0 rounded-full shadow-inner"
-                            aria-hidden="true"
-                          ></div>
-                        </div>
-                        <div>
-                          <span className={`${kurbanDeleteLoading === kurban._id ? "hidden" : ""}`}>{index+1}</span>
-                          <span className='text-pink-800'>
-                            <Icon name="spin_loader_1" size={5} className={`animate-spin ${kurbanDeleteLoading === kurban._id ? "" : "hidden"}`}/>
-                          </span>
-                        </div>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700 dark:bg-gray-800">
+              {kurbans && kurbans?.map((kurban) =>  (
+                  <SortableRow key={kurban._id} id={kurban._id} disabled={searchActive}>
+                  {({ listeners }) => (<>
+                    <td className="px-2 py-3">
+                      <div className="flex items-center justify-center">
+                        <span className={`text-pink-800 ${kurbanDeleteLoading === kurban._id ? "" : "hidden"}`}>
+                          <Icon name="spin_loader_1" size={5} className="animate-spin"/>
+                        </span>
+                        {!searchActive && kurbanDeleteLoading !== kurban._id && <DragHandle listeners={listeners} />}
                       </div>
                     </td>
                     <td className="px-4 py-3">
@@ -328,7 +400,7 @@ function BuyukBasKurbanList({ project_id }) {
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div className='flex items-center justify-center'>
-                        <NavLink to={"/kurum/edit-buyukbas"} state={kurban} title="Kurbanı düzenle" aria-label="Kurbanı düzenle">
+                        <NavLink to={`/kurum/edit-buyukbas/${kurban._id}`} state={kurban} title="Kurbanı düzenle" aria-label="Kurbanı düzenle">
                           <div className="p-3 cursor-pointer text-orange-500 bg-orange-100 rounded-full dark:text-orange-100 dark:bg-orange-500 hover:bg-orange-200">
                               <Icon name="edit" />
                           </div>
@@ -347,22 +419,30 @@ function BuyukBasKurbanList({ project_id }) {
                         </button>
                       </div>
                     </td>
-                </tr>)
+                  </>)}
+                  </SortableRow>)
               )}
-                
               </tbody>
+              </SortableContext>
+              </DndContext>
             </table>
           </div>
 
           {/* Mobile card layout */}
-          <div className={`${loading || kurbans?.length === 0 ? "hidden" : ""} md:hidden divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800`}>
-            {kurbans && kurbans.map((kurban, index) => (
-              <div key={kurban._id} className="p-4">
+          <div className={`${loading || kurbans?.length === 0 ? "hidden" : ""} md:hidden divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-800`}>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
+            {kurbans && kurbans.map((kurban) => (
+              <SortableCard key={kurban._id} id={kurban._id} disabled={searchActive}>
+              {({ listeners }) => (
+              <div className="p-4 bg-white dark:bg-gray-800">
                 <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <span className="text-xs text-gray-500 block">{kurban?.kurban_hisse_group}</span>
-                    <span className="text-2xl font-semibold leading-none block">{kurban.kurban_no}</span>
-                    <span className="text-xs text-gray-400">#{index+1}</span>
+                  <div className="flex items-start gap-2">
+                    {!searchActive && <DragHandle listeners={listeners} className="-ml-1 mt-1" />}
+                    <div>
+                      <span className="text-xs text-gray-500 block">{kurban?.kurban_hisse_group}</span>
+                      <span className="text-2xl font-semibold leading-none block">{kurban.kurban_no}</span>
+                    </div>
                   </div>
                   <button
                     type="button"
@@ -417,7 +497,7 @@ function BuyukBasKurbanList({ project_id }) {
                     className="p-2 cursor-pointer text-purple-500 bg-purple-100 rounded-full hover:bg-purple-200">
                     <ChatIcon className='w-5 h-5' />
                   </button>
-                  <NavLink to={"/kurum/edit-buyukbas"} state={kurban} title="Kurbanı düzenle" aria-label="Kurbanı düzenle">
+                  <NavLink to={`/kurum/edit-buyukbas/${kurban._id}`} state={kurban} title="Kurbanı düzenle" aria-label="Kurbanı düzenle">
                     <div className="p-2 cursor-pointer text-orange-500 bg-orange-100 rounded-full hover:bg-orange-200">
                       <Icon name="edit" />
                     </div>
@@ -432,7 +512,11 @@ function BuyukBasKurbanList({ project_id }) {
                   </button>
                 </div>
               </div>
+              )}
+              </SortableCard>
             ))}
+            </SortableContext>
+            </DndContext>
           </div>
 
           {/* Pagination */}
