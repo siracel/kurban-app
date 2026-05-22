@@ -2,12 +2,44 @@ import { useEffect, useState } from "react"
 import { useParams } from "react-router-dom"
 import KurbanService from "../../../../services/BKurbanService";
 import Loading from "../../../components/Loading";
-//import Video from "../components/Video";
 import "../../../../assets/css/KurbanInfo.css"
 
 import { DefaultPlayer as Video } from 'react-html5video';
 import 'react-html5video/dist/styles.css';
 import ProcessSteps from "./ProcessSteps";
+
+/**
+ * Resolves an embed value into a usable iframe src.
+ * Accepts: a full <iframe ... src="..."> embed code (any provider),
+ * a bare URL, or a YouTube video id (backwards compatibility).
+ */
+function resolveEmbedSrc(input) {
+  if (!input) return ""
+  const value = String(input).trim()
+
+  const iframeMatch = value.match(/<iframe[^>]*\ssrc=["']([^"']+)["']/i)
+  if (iframeMatch) return iframeMatch[1]
+
+  if (/^https?:\/\//i.test(value)) return value
+
+  return `https://www.youtube.com/embed/${value}`
+}
+
+// 16:9 responsive iframe wrapper
+function VideoFrame({ src, title }) {
+  return (
+    <div className="relative w-full overflow-hidden rounded-xl bg-black" style={{ paddingTop: "56.25%" }}>
+      <iframe
+        src={src}
+        title={title}
+        className="absolute inset-0 w-full h-full"
+        frameBorder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+    </div>
+  )
+}
 
 export default function KurbanInfo() {
   let { kurban_code } = useParams();
@@ -16,18 +48,14 @@ export default function KurbanInfo() {
   const [tarih, setTarih] = useState('')
   const [kurban, setKurban] = useState({})
   const [process, setProcess] = useState([])
-  
+
   const getKurban = async () => {
     const kurbanInfo = await KurbanService.getKurbanInfo(kurban_code)
-    getKurumProcess(kurbanInfo.data[0].kurum_id)
-    setKurban(kurbanInfo.data[0])
-    //console.log(kurbanInfo.data[0])
-
-    setKurban((state) => {
-      console.log(state);
-      setLoading(false)
-      return state;
-    });
+    if (kurbanInfo?.data?.[0]) {
+      getKurumProcess(kurbanInfo.data[0].kurum_id)
+      setKurban(kurbanInfo.data[0])
+    }
+    setLoading(false)
   }
 
   const getKurumProcess = async (kurum_id) => {
@@ -36,133 +64,118 @@ export default function KurbanInfo() {
   }
 
   const setTarihThing = () => {
-    const tarih = new Date();
-    const gunler = ["Pzr", "Ptesi", "Salı", "Çrş", "Perş", "Cuma", "Ctesi"];
-    const dayName = gunler[tarih.getDay()]
-    const day = tarih.getDate().toString().padStart(2, "0");
-    const month = (tarih.getMonth() + 1).toString().padStart(2, "0");
-    const year = tarih.getFullYear()
-
-    setTarih(day + "." + month + "." + year + ", " + dayName)
+    const t = new Date();
+    const gunler = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
+    const day = t.getDate().toString().padStart(2, "0");
+    const month = (t.getMonth() + 1).toString().padStart(2, "0");
+    setTarih(`${day}.${month}.${t.getFullYear()}, ${gunler[t.getDay()]}`)
   }
 
   useEffect(() => {
-    console.log(kurban_code)
-    console.log(tarih)
-
     setTarihThing()
     getKurban()
-    
   }, [])
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loading loading={loading} />
+      </div>
+    )
+  }
+
+  const hasVideo = kurban?.youtube_embed || kurban?.vidyome_embed || kurban?.video_path
+
   return (
+    <div className="kurban-info-page min-h-screen bg-slate-50 pb-10">
+      {/* Hero */}
+      <header className="bg-gradient-to-br from-teal-500 to-cyan-600 text-white text-center px-5 pt-10 pb-20 rounded-b-[2.5rem] shadow-sm">
+        <p className="text-xs font-medium tracking-widest uppercase text-white/80">Kurban Takip</p>
+        <h1 className="text-2xl font-bold mt-2 leading-snug">Kurban Bayramınız<br />Mübarek Olsun</h1>
+        <p className="text-sm text-white/80 mt-3 max-w-xs mx-auto">
+          Kurbanınızın güncel durumunu bu sayfadan takip edebilirsiniz.
+        </p>
+      </header>
 
-<>
-  <div className={`kurban-info-wrapper ${loading ? "hidden" : ""} w-full pb-8 mb-5`}>
-    <header className="bg-white flex justify-center p-4 shadow-lg">
-      <span className="font-bold text-[#1BABB4] text-2xl">KURBAN BİLGİ EKRANI</span>
-    </header>
+      <main className="max-w-md mx-auto px-4 -mt-12 space-y-4">
+        {/* Kurban No + Durum */}
+        <section className="bg-white rounded-2xl shadow-lg p-6 text-center">
+          <p className="text-xs uppercase tracking-wider text-gray-400">Kurban No</p>
+          <p className="text-5xl font-bold text-teal-600 mt-1 leading-none">{kurban?.kurban_no}</p>
+          {kurban?.process?.process_title && (
+            <div className="mt-5 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-teal-50 text-teal-700 text-sm font-semibold">
+              <span className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+              {kurban.process.process_title}
+            </div>
+          )}
+        </section>
 
-    <div className="py-6 flex justify-center">
-      <p className="text-xl font-semibold text-white drop-shadow-md tracking-wide">Kurban Bayramınız Mübarek Olsun</p>
+        {/* Hisse Grubu + Fiyat */}
+        <section className="grid grid-cols-2 gap-3">
+          <div className="bg-white rounded-2xl shadow-sm p-4 text-center">
+            <p className="text-xs text-gray-400">Hisse Grubu</p>
+            <p className="text-base font-semibold text-gray-800 mt-1 break-words">{kurban?.kurban_hisse_group || "—"}</p>
+          </div>
+          <div className="bg-white rounded-2xl shadow-sm p-4 text-center">
+            <p className="text-xs text-gray-400">Net Hisse Fiyatı</p>
+            <p className="text-base font-semibold text-gray-800 mt-1">{kurban?.net_hisse_fiyat ? `${kurban.net_hisse_fiyat} ₺` : "—"}</p>
+          </div>
+        </section>
+
+        {/* Süreç */}
+        <section className="bg-white rounded-2xl shadow-sm p-5">
+          <h2 className="font-semibold text-gray-800 mb-5">Kurbanım Şu Anda Ne Durumda?</h2>
+          <ProcessSteps process={process} currentID={kurban?.process?._id} />
+        </section>
+
+        {/* Hissedarlar */}
+        {kurban?.hisse?.length > 0 && (
+          <section className="bg-white rounded-2xl shadow-sm p-5">
+            <h2 className="font-semibold text-gray-800 mb-3">Hissedarlar</h2>
+            <ul className="divide-y divide-gray-100">
+              {kurban.hisse.map(hissedar => (
+                <li key={hissedar._id} className="flex items-center gap-3 py-2.5">
+                  <span className="flex-shrink-0 w-9 h-9 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-sm font-semibold">
+                    {(hissedar.hissedar_full_name || "?").charAt(0).toUpperCase()}
+                  </span>
+                  <span className="text-gray-700">{hissedar.hissedar_full_name}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Fotoğraf */}
+        {kurban?.kurban_image && (
+          <section className="bg-white rounded-2xl shadow-sm p-5">
+            <h2 className="font-semibold text-gray-800 mb-3">Kurbanınız</h2>
+            <img src={kurban.kurban_image} alt="kurban" className="w-full h-auto rounded-xl" />
+          </section>
+        )}
+
+        {/* Video */}
+        {hasVideo ? (
+          <section className="bg-white rounded-2xl shadow-sm p-5">
+            <h2 className="font-semibold text-gray-800 mb-3">Bu Kurbanın Videosu</h2>
+            {kurban?.youtube_embed && <VideoFrame src={resolveEmbedSrc(kurban.youtube_embed)} title="Kurban videosu" />}
+            {kurban?.vidyome_embed && <VideoFrame src={kurban.vidyome_embed} title="Kurban videosu" />}
+            {kurban?.video_path && (
+              <Video autoPlay className="w-full rounded-xl overflow-hidden"
+                controls={['PlayPause', 'Seek', 'Time', 'Volume', 'Fullscreen']}>
+                <source src={kurban.video_path} type="video/mp4" />
+              </Video>
+            )}
+          </section>
+        ) : (
+          <section className="bg-white rounded-2xl shadow-sm p-5 text-center">
+            <p className="text-sm text-gray-400">
+              Kurbanınız kesildikten sonra kesim videosunu buradan izleyebilirsiniz.
+            </p>
+          </section>
+        )}
+
+        <p className="text-center text-xs text-gray-400 pt-2">{tarih}</p>
+      </main>
     </div>
-
-    <div className="grid grid-cols-2 gap-2 mx-2 md:mx-10 my-2">
-      {/*<div className="bg-[#F3FBFC] p-4 flex flex-col justify-center items-center">
-        <p className="py-1 text-xl text-gray-600/70 font-medium">Tarih</p>
-        <p className="py-1 text-xl  text-[#44bdc6] font-semibold">{tarih}</p>
-      </div>*/}
-      <div className="bg-[#F3FBFC] p-4 text-center justify-center items-center card">
-        <p className="py-1 text-xl text-gray-600/70 font-medium">Kurban No</p>
-        <p className="py-1 text-2xl text-[#44bdc6] font-semibold">{kurban?.kurban_no}</p>
-      </div>
-      <div className="bg-[#F3FBFC] p-4 text-center justify-center items-center card">
-        <p className="py-1 text-xl text-gray-600/70 font-medium">Hisse Grubu</p>
-        <p className="py-1 text-2xl text-[#44bdc6] font-semibold">{kurban?.kurban_hisse_group}</p>
-      </div>
-      <div className="bg-[#F3FBFC] p-4 text-center justify-center items-center card">
-        <p className="py-1 text-xl text-gray-600/70 font-medium">Durumu</p>
-        <p className="py-1 text-xl text-[#44bdc6] font-semibold">{kurban?.process?.process_title}</p>
-      </div>
-      <div className="bg-[#F3FBFC] p-4 text-center justify-center items-center card">
-        <p className="py-1 text-xl text-gray-600/70 font-medium">Net Hisse Fiyatı</p>
-        <p className="py-1 text-2xl text-[#44bdc6] font-semibold">{kurban?.net_hisse_fiyat} ₺</p>
-      </div>
-    </div>
-
-
-    <div className="bg-white p-4 mx-2 md:mx-10 my-2 card">
-        <h2 className="font-semibold text-gray-500 text-center text-xl my-2 mb-5">Kurbanım Şu Anda Ne Durumda</h2>
-        <ProcessSteps process={process} currentID={kurban?.process?._id} />
-    </div>
-
-    <div className="bg-[#F3FBFC] p-4 mx-2 md:mx-10 my-2 text-center card">
-        <h2 className="font-semibold text-gray-500 text-xl my-2">Bu Kurbanın Hissedarları</h2>
-        <ul className="text-lg text-gray-600/70 font-medium">
-          {kurban?.hisse?.map(hissedar => (
-            <li key={hissedar._id} className="p-1">{hissedar.hissedar_full_name}</li>
-          ))}
-        </ul>
-    </div>
-
-    <div className={`${kurban?.kurban_image ? "" : "hidden"} bg-[#F3FBFC] p-4 mx-2 md:mx-10 my-2 text-center card`}>
-        <h2 className="font-semibold text-gray-500 text-xl my-2">Kurbanınız</h2>
-
-        <div >
-          <img src={kurban?.kurban_image} alt="kurban" className="w-full md:max-w-3xl mx-auto h-auto"/>
-        </div>
-    </div>    
-
-    <div className={`${(kurban?.youtube_embed || kurban?.video_path || kurban?.vidyome_embed) ? "hidden" : ""} bg-[#F3FBFC] p-4 mx-2 md:mx-10 my-2 text-center !mb-5`}>
-      <p className={`text-gray-400 text-sm`}>Kurbanınız kesildikten sonra kesim videosunu buradan izleyebilirsiniz..</p>
-    </div>
-    
-    <div className={`${kurban?.vidyome_embed ? "" : "hidden"} bg-[#F3FBFC] p-4 mx-2 md:mx-10 my-2 text-center !mb-5 card`}>
-        <h2 className="font-semibold text-gray-500 text-xl my-2">Bu Kurbanın Videosu</h2>
-        
-        <div className="overflow-hidden relative mx-auto">
-          <iframe src={kurban?.vidyome_embed}
-                  title="Vidyome video player"
-                  width="100%" height="380" frameborder="0" scrolling="no" webkitallowfullscreen allowfullscreen></iframe>
-        </div>
-    </div>
-
-    <div className={`${kurban?.youtube_embed ? "" : "hidden"} bg-[#F3FBFC] p-4 mx-2 md:mx-10 my-2 text-center !mb-5 card`}>
-        <h2 className="font-semibold text-gray-500 text-xl my-2">Bu Kurbanın Videosu</h2>
-        
-        <div className="overflow-hidden relative mx-auto">
-          <iframe width="100%" height="320" src={`https://www.youtube.com/embed/${kurban?.youtube_embed}`} 
-          className="mx-auto"
-          title="YouTube video player"
-          frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen />
-        </div>
-        
-    </div>
-    
-    <div className={`${kurban?.video_path ? "" : "hidden"} bg-[#F3FBFC] p-4 mx-2 md:mx-10 my-2 text-center !mb-5 card`}>
-        <h2 className="font-semibold text-gray-500 text-xl my-2">Bu Kurbanın Videosu</h2>
-
-        {/*kurban?.video_path && <video width="800" height="500" controls className="mx-auto">
-                <source src={kurban?.video_path ? kurban?.video_path : ""} type="video/mp4" />
-          </video>*/}
-        
-        {kurban?.video_path && <Video autoPlay width="800" className="max-w-3xl mx-auto"
-            controls={['PlayPause', 'Seek', 'Time', 'Volume', 'Fullscreen']}
-            poster="https://images.unsplash.com/photo-1502590464431-3b66d77494d7?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1974&q=80"
-            onCanPlayThrough={() => {
-                // Do stuff
-            }}>
-            <source src={kurban?.video_path ? kurban?.video_path : ""} type="video/mp4" />
-          </Video>}       
-    </div>
-  
-  </div>
-
-  <div className={` ${loading ? "" : "hidden"} py-10 text-lg  font-semibold`}>
-      <Loading loading={loading} className=" tracking-wider" />
-  </div>
-
-  </>
   )
 }

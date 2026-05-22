@@ -1,4 +1,3 @@
-/* This example requires Tailwind CSS v2.0+ */
 import { CheckIcon } from '@heroicons/react/solid'
 import { useEffect, useState } from 'react'
 
@@ -6,84 +5,69 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
-export default function ProcessSteps({process, currentID}) {
-  
-    const [currentIndex, setCurrentIndex] = useState('')
+export default function ProcessSteps({ process, currentID }) {
+  const [currentIndex, setCurrentIndex] = useState(-1)
 
-    useEffect(() => {
-        console.log(process)
-        process.forEach((element, index) => {
-            if(element._id === currentID) {
-                setCurrentIndex(index)
-            }
-        });
-    }, [process])
-
-    useEffect(() => {
-      console.log(process);
-    }, [])
+  useEffect(() => {
+    process.forEach((element, index) => {
+      if (element._id === currentID) setCurrentIndex(index)
+    })
+  }, [process, currentID])
 
   return (
-    <nav aria-label="Progress" className='ml-5'>
-      
+    <nav aria-label="Süreç" className="pl-1">
       <ol className="overflow-hidden">
-        {process?.map((step, stepIdx) => (
-          <li key={step._id} className={classNames(stepIdx !== process.length - 1 ? 'pb-10' : '', 'relative')}>
-            {stepIdx < currentIndex ? (
-              <>
-                {stepIdx !== process.length - 1 ? (
-                  <div className="-ml-px absolute mt-0.5 top-4 left-4 w-0.5 h-full bg-indigo-600" aria-hidden="true" />
-                ) : null}
-                <a href={step.href} className="relative flex items-center group">
-                  <span className="h-9 flex items-center">
-                    <span className="relative z-10 w-8 h-8 flex items-center justify-center bg-indigo-600 rounded-full group-hover:bg-indigo-800">
+        {process?.map((step, stepIdx) => {
+          const isLast = stepIdx === process.length - 1
+          const isDone = stepIdx < currentIndex
+          const isCurrent = step._id === currentID
+
+          return (
+            <li key={step._id} className={classNames(!isLast ? 'pb-8' : '', 'relative')}>
+              {/* connector line */}
+              {!isLast && (
+                <div
+                  className={classNames(
+                    '-ml-px absolute mt-0.5 top-5 left-4 w-0.5 h-full',
+                    isDone ? 'bg-teal-500' : 'bg-gray-200'
+                  )}
+                  aria-hidden="true"
+                />
+              )}
+
+              <div className="relative flex items-center" aria-current={isCurrent ? 'step' : undefined}>
+                <span className="flex items-center">
+                  {isDone ? (
+                    <span className="relative z-10 w-8 h-8 flex items-center justify-center bg-teal-500 rounded-full">
                       <CheckIcon className="w-5 h-5 text-white" aria-hidden="true" />
                     </span>
-                  </span>
-                  <span className="ml-4 min-w-0 flex flex-col">
-                    <span className="text-xs font-semibold tracking-wide uppercase">{step.process_title}</span>
-                    <span className="text-sm text-gray-500">{step.description}</span>
-                  </span>
-                </a>
-              </>
-            ) : step._id === currentID ? (
-              <>
-                {stepIdx !== process.length - 1 ? (
-                  <div className="-ml-px absolute mt-0.5 top-4 left-4 w-0.5 h-full bg-gray-300" aria-hidden="true" />
-                ) : null}
-                <div className="relative flex items-center group" aria-current="step">
-                  <span className="h-9 flex items-center" aria-hidden="true">
-                    <span className="relative z-10 w-8 h-8 flex items-center justify-center bg-white border-2 border-indigo-600 rounded-full">
-                      <span className="h-2.5 w-2.5 bg-indigo-600 rounded-full" />
+                  ) : isCurrent ? (
+                    <span className="relative z-10 w-8 h-8 flex items-center justify-center bg-white border-2 border-teal-500 rounded-full ring-4 ring-teal-100">
+                      <span className="h-2.5 w-2.5 bg-teal-500 rounded-full animate-pulse" />
                     </span>
-                  </span>
-                  <span className="ml-4 min-w-0 flex flex-col">
-                    <span className="text-xs font-semibold tracking-wide uppercase text-indigo-600">{step.process_title}</span>
-                    <span className={`text-sm text-gray-500`}>Kurbanınız Şu Anda Bu Aşamada</span>
-                  </span>
-                </div>
-              </>
-            ) : (
-              <>
-                {stepIdx !== process.length - 1 ? (
-                  <div className="-ml-px absolute mt-0.5 top-4 left-4 w-0.5 h-full bg-gray-300" aria-hidden="true" />
-                ) : null}
-                <div className="relative flex items-center group">
-                  <span className="h-9 flex items-start" aria-hidden="true">
-                    <span className="relative z-10 w-8 h-8 flex items-center justify-center bg-white border-2 border-gray-300 rounded-full group-hover:border-gray-400">
-                      <span className="h-2.5 w-2.5 bg-transparent rounded-full group-hover:bg-gray-300" />
+                  ) : (
+                    <span className="relative z-10 w-8 h-8 flex items-center justify-center bg-white border-2 border-gray-200 rounded-full">
+                      <span className="h-2.5 w-2.5 bg-transparent rounded-full" />
                     </span>
+                  )}
+                </span>
+
+                <span className="ml-4 min-w-0 flex flex-col">
+                  <span className={classNames(
+                    'text-sm font-semibold',
+                    isCurrent ? 'text-teal-600' : isDone ? 'text-gray-700' : 'text-gray-400'
+                  )}>
+                    {step.process_title}
                   </span>
-                  <span className="ml-4 min-w-0 flex flex-col">
-                    <span className="text-xs font-semibold tracking-wide uppercase text-gray-500">{step.process_title}</span>
-                  </span>
-                </div>
-              </>
-            )}
-          </li>
-        ))}
+                  {isCurrent && (
+                    <span className="text-xs text-gray-400 mt-0.5">Kurbanınız şu anda bu aşamada</span>
+                  )}
+                </span>
+              </div>
+            </li>
+          )
+        })}
       </ol>
-   
     </nav>
   )
 }
