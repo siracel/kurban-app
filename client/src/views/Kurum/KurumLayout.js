@@ -26,22 +26,22 @@ function Kurum() {
   if(isKurumAuth) axios.defaults.headers.common['Authorization'] = `Bearer ${kurum.token}`;
 
   return (
-    <div className='flex h-screen bg-gray-50 dark:bg-gray-900'>
-      
+    <div className='flex h-screen bg-gray-100 dark:bg-gray-900 md:p-4 md:gap-4'>
+
       {isKurumAuth ? <LeftMenu /> : null}
-      
-      <div className="flex flex-col flex-1">
+
+      <div className="flex flex-col flex-1 min-w-0 md:gap-4">
         {isKurumAuth ? <Header /> : null}
-        
-        <main className="h-full pb-16 overflow-y-auto">
-          <div className="container p-6 mx-auto grid dark:text-gray-200">
+
+        <main className="flex-1 overflow-y-auto">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 md:py-2 dark:text-gray-200">
             <ErrorBoundary>
               <Outlet />
             </ErrorBoundary>
           </div>
         </main>
       </div>
-      
+
     </div>
   );
 }

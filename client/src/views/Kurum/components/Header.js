@@ -19,6 +19,7 @@ function Header() {
 
     const mobileMenu = useSelector(state => state.kurum.mobileMenu)
     const isDark = useSelector(state => state.kurum.isDark)
+    const active_project_id = useSelector(state => state.kurum.active_project_id)
 
     const toggleMobileMenu = () => {
       let status = mobileMenu ? false : true
@@ -52,33 +53,45 @@ function Header() {
     }, [location]);
 
     return (
-        <header className="z-10 py-4 bg-white shadow-md dark:bg-gray-800 ">
+        <header className="z-10 bg-white shadow-sm md:rounded-2xl border-b md:border border-gray-100 dark:border-gray-700 dark:bg-gray-800">
           <div
-            className="container flex items-center justify-between h-full px-6 mx-auto text-purple-600 dark:text-purple-300"
+            className="flex items-center justify-between h-16 px-6 text-purple-600 dark:text-purple-300"
           >
-     
-            <button
-              className="p-1 -ml-1 mr-5 rounded-md md:hidden focus:outline-none focus:shadow-outline-purple"
-              onClick={toggleMobileMenu}
-              aria-label="Menu"
-            >
-              <svg
-                className="w-6 h-6"
-                aria-hidden="true"
-                fill="currentColor"
-                viewBox="0 0 20 20"
+
+            <div className="flex items-center min-w-0">
+              <button
+                className="p-1 -ml-1 mr-3 rounded-md md:hidden focus:outline-none focus:shadow-outline-purple"
+                onClick={toggleMobileMenu}
+                aria-label="Menu"
               >
-                <path
-                  d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
-                ></path>
-              </svg>
-            </button>
-  
-            <div className="flex justify-center flex-1 lg:mr-32">
-              {/* Header Search Area */}  
+                <svg
+                  className="w-6 h-6"
+                  aria-hidden="true"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                  ></path>
+                </svg>
+              </button>
+
+              <span className="font-bold text-gray-800 dark:text-gray-100 truncate">
+                {kurum.kurum_name}
+              </span>
             </div>
 
-            <ul className={`flex items-center flex-shrink-0 space-x-6`}>
+            <ul className={`flex items-center flex-shrink-0 space-x-4 sm:space-x-6`}>
+              {active_project_id ? (
+                <li className="flex">
+                  <NavLink
+                    to="/kurum/create-buyukbas"
+                    className="inline-flex items-center px-3 sm:px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700"
+                  >
+                    Kurban Oluştur+
+                  </NavLink>
+                </li>
+              ) : null}
             <li className="flex">
                 <button onClick={toggleDarkTheme} className="rounded-md focus:outline-none focus:shadow-outline-purple" aria-label="Toggle color mode">
                   <span className={`${isDark ? "hidden" : ""}`}>
