@@ -21,10 +21,6 @@ class BKurbanService {
         return axios.get(`/buyukbas-kurban/single/${id}`);
     }
     
-    getForEkran(payload) {
-        return axios.get(`/buyukbas-kurban/process/${payload.kurum_id}/${payload.project_id}/${payload.process_id}/${payload.self}`);
-    }
-    
     /* For Kurban-Info Page */
     getKurbanInfo(kurban_code) {
         return axios.get(`/user/kurban-info/${kurban_code}`);

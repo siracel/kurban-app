@@ -32,10 +32,6 @@ import CreateHisseGroup from '../views/Kurum/pages/HisseGroup/CreateHisseGroup'
 import Setting from '../views/Kurum/pages/Setting'
 import NewSMSAPI from '../views/Kurum/pages/Setting/components/NewSMSAPI'
 
-import Ekran from '../views/Kurum/pages/Ekran/Ekran'
-import EkranManagement from '../views/Kurum/pages/Ekran/EkranManagement'
-import CreateEkranDynamic from '../views/Kurum/pages/Ekran/CreateEkranDynamic'
-import CreateEkranStatic from '../views/Kurum/pages/Ekran/CreateEkranStatic'
 
 import KurumLogin from '../views/Kurum/pages/Login'
 import KurumRegister from '../views/Kurum/pages/Register'
@@ -193,26 +189,6 @@ const routers = (isUserAuth, isKurumAuth, isAdminAuth) => [
                 path: 'create-hisse',
                 exact: false,
                 element: <CreateHisse />
-            },
-            {
-                path: 'ekran-management',
-                exact: false,
-                element: <EkranManagement />
-            },
-            {
-                path: 'ekran',
-                exact: false,
-                element: <Ekran />
-            },
-            {
-                path: 'create-ekran-static',
-                exact: false,
-                element: <CreateEkranStatic />
-            },
-            {
-                path: 'create-ekran-dynamic',
-                exact: false,
-                element: <CreateEkranDynamic />
             },
             {
                 path: 'setting',

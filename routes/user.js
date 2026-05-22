@@ -124,15 +124,11 @@ import { findByProjectID, findByKurbanID } from '../controllers/HisseController.
 router.get('/hisse/:kurban_id', findByKurbanID)
 router.get('/hisse/:project_id', findByProjectID)
 
-import ekran from "./ekran.js"
-router.use('/ekran', ekran)
-
-import { findSingleBuyukbas, findForEkran } from '../controllers/BuyukbasKurbanController.js'
+import { findSingleBuyukbas } from '../controllers/BuyukbasKurbanController.js'
 
 
 router.get('/buyukbas-kurban/:project_id', findAll)
 router.get('/buyukbas-kurban/single/:id', findSingleBuyukbas)
-router.get('/buyukbas-kurban/process/:kurum_id/:project_id/:process_id/:self', findForEkran)
 
 /* created by admin */
 import { findAllMessageAPI } from '../controllers/MessageAPIController.js'

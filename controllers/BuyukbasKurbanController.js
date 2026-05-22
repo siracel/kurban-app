@@ -25,25 +25,6 @@ const findSingleBuyukbas = asyncHandler( async (req,res) => {
     return res.status(200).json(buyukbas);
 })
 
-const findForEkran = asyncHandler( async (req,res) => {
-    // req.params.kurum_id
-    // req.params.project_id
-    // req.params.project_id
-    // req.params.self
-
-    if(req.params.self === "true") {
-        const buyukbas = await Buyukbas.find({$and: [{process_id: req.params.process_id}, {project_id: req.params.project_id}]}).populate("hisse").populate("process").sort('createdAt').limit(1)
-        console.log("self true runned")
-        return res.status(200).json(buyukbas);
-    } else {
-        const process = await Process.findById(req.params.process_id)
-        const processMain = await Process.find({ $and: [ { process_order: (process.process_order-1) }, { kurum_id: req.params.kurum_id } ] })
-        if(processMain.length === 0) return res.status(200).json({error: "İLGİLİ PROCESS BULUNAMADI - BuyukbasKurbanController"});
-        const buyukbas = await Buyukbas.find({$and: [{process: processMain[0]._id}, {project_id: req.params.project_id}]}).populate("hisse").populate("process").sort('createdAt').limit(1)
-        return res.status(200).json(buyukbas);
-    }
-})
-
 const findAll = asyncHandler( async (req,res) => {
     const buyukbas = await Buyukbas.find({project_id: req.params.project_id}).populate("hisse").populate("process").sort('kurban_no')
     return res.status(200).json(buyukbas);
@@ -206,4 +187,4 @@ const _delete = async (req,res) =>{
 }
 
 
-export { create, findSingleBuyukbas, findAll, findForEkran, update, _delete, uploadKurbanImage, changeKurbanProcess, reorderKurbans }
+export { create, findSingleBuyukbas, findAll, update, _delete, uploadKurbanImage, changeKurbanProcess, reorderKurbans }
