@@ -150,7 +150,7 @@ const routers = (isUserAuth, isKurumAuth, isAdminAuth) => [
                 element: <CreateBuyukbas />
             },
             {
-                path: 'edit-buyukbas',
+                path: 'edit-buyukbas/:id',
                 exact: false,
                 element: <EditBuyukbas />
             },

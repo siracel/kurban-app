@@ -15,6 +15,11 @@ class BKurbanService {
     get(id) {
         return axios.get(`/buyukbas-kurban/${id}`);
     }
+
+    // tek bir kurbanı _id ile getir (findSingleBuyukbas -> [kurban] döner)
+    getSingle(id) {
+        return axios.get(`/buyukbas-kurban/single/${id}`);
+    }
     
     getForEkran(payload) {
         return axios.get(`/buyukbas-kurban/process/${payload.kurum_id}/${payload.project_id}/${payload.process_id}/${payload.self}`);
@@ -35,6 +40,11 @@ class BKurbanService {
 
     changeProcess(payload) {
         return axios.put(`/buyukbas-kurban/change-process/${payload._id}`, payload);
+    }
+
+    // yeni sıradaki _id dizisini gönderir; backend kurban_no'yu 1..N yapar
+    reorder(items) {
+        return axios.put(`/buyukbas-kurban/reorder`, { items });
     }
 
     upload(payload, id, uploadFileOption) {
