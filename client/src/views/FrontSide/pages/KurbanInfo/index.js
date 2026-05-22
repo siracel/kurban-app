@@ -4,8 +4,6 @@ import KurbanService from "../../../../services/BKurbanService";
 import Loading from "../../../components/Loading";
 import "../../../../assets/css/KurbanInfo.css"
 
-import { DefaultPlayer as Video } from 'react-html5video';
-import 'react-html5video/dist/styles.css';
 import ProcessSteps from "./ProcessSteps";
 
 /**
@@ -160,10 +158,9 @@ export default function KurbanInfo() {
             {kurban?.youtube_embed && <VideoFrame src={resolveEmbedSrc(kurban.youtube_embed)} title="Kurban videosu" />}
             {kurban?.vidyome_embed && <VideoFrame src={kurban.vidyome_embed} title="Kurban videosu" />}
             {kurban?.video_path && (
-              <Video autoPlay className="w-full rounded-xl overflow-hidden"
-                controls={['PlayPause', 'Seek', 'Time', 'Volume', 'Fullscreen']}>
+              <video controls className="w-full rounded-xl overflow-hidden bg-black">
                 <source src={kurban.video_path} type="video/mp4" />
-              </Video>
+              </video>
             )}
           </section>
         ) : (

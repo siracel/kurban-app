@@ -163,56 +163,6 @@ const create = async (req,res) => {
     return res.status(200).json(createKurban);
 }
 
-const uploadKurbanVideo = async (req, res, next) => {
-    const id = { _id: req.params.id }
-
-    try{
-        // delete if it has a video
-        /*const f = await Buyukbas.findById(id)
-        if(f.video_path) {
-            const path = 'client/src/assets/uploads/' + f.video_path
-            fs.unlink(path, (err) => {
-                if (err) { console.error(err) }
-            })
-        }*/
-
-        // delete s3 object
-        const f = await Buyukbas.findById(id)
-        if(f.video_path) {
-            const s3 = new AWS.S3(
-                { 
-                    accessKeyId: process.env.AWS_S3_ACCESS_KEY_ID,
-                    secretAccessKey: process.env.AWS_S3_SECRET_ACCESS_KEY,
-                    Bucket: "awskurbanapp"
-                }
-            );
-              
-            s3.deleteObject({
-                Bucket: "awskurbanapp",
-                Key: f.video_key
-            }, function (err,data){
-                console.log(data)
-                console.log(err)
-            })
-        }
-
-
-        // save new video path
-        const uploaded = await Buyukbas.findOneAndUpdate(id, {
-            //video_path: 'uploads/' + req.file.filename
-            video_path: req.file.location,
-            video_key: req.file.key
-        }, {new: true});
-
-        //console.log(req.file)
-
-        return res.status(200).json(uploaded);
-    }catch(error) {
-        return res.status(200).json({error: error});
-    }
-
-}
-
 const uploadKurbanImage = async (req, res, next) => {
     const id = { _id: req.params.id }
 
@@ -256,4 +206,4 @@ const _delete = async (req,res) =>{
 }
 
 
-export { create, findSingleBuyukbas, findAll, findForEkran, update, _delete, uploadKurbanVideo, uploadKurbanImage, changeKurbanProcess, reorderKurbans }
+export { create, findSingleBuyukbas, findAll, findForEkran, update, _delete, uploadKurbanImage, changeKurbanProcess, reorderKurbans }

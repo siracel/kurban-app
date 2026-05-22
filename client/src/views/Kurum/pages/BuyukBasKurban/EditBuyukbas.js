@@ -42,10 +42,8 @@ function EditBuyukbas() {
 
     const navigate = useNavigate()
     //const [v, setV] = useState(false);
-    const [percentage, setUploadFileProgress] = useState(0);
     const [loading, setLoading] = useState(false);
     const [errors, setError] = useState([]);
-    const [singleFile, setSingleFile] = useState('');
     const [kurbanImage, setKurbanImage] = useState('');
     const [img, setImg] = useState('');
 
@@ -54,7 +52,6 @@ function EditBuyukbas() {
     const [hisse_groups, setHisseGroup] = useState([]);
     const [kurbanCode, setKurbanCode] = useState("");
     const [kurbanNo, setKurbanNo] = useState("");
-    const [videoPath, setVideoPath] = useState("");
     const [copied, setCopied] = useState(false);
     const [noty, setNoty] = useState({ isOpen: false });
     const embedRef = useRef(null);
@@ -104,7 +101,6 @@ function EditBuyukbas() {
       setImg(data.kurban_image)
       setKurbanCode(data.uniq_kurban_code)
       if (data.kurban_no !== undefined) setKurbanNo(data.kurban_no)
-      if (data.video_path !== undefined) setVideoPath(data.video_path)
       Object.keys(formData).forEach(key => {
         if (data[key] !== undefined) {
           setFormData((prevState) => ({ ...prevState, [key]: data[key] }))
@@ -146,23 +142,6 @@ function EditBuyukbas() {
       }
     }
     
-    const SingleFileChange = (e) => {
-      setSingleFile(e.target.files[0]);
-      //setSingleProgress(0);
-    }
-
-    const uploadFileOption = {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-      onUploadProgress: (progressEvent) => {
-        const {loaded, total} = progressEvent;
-        const percent = Math.floor(((loaded/1000) * 100) / (total/1000))
-        setUploadFileProgress(percent)
-        console.log(percentage)
-      }
-    }
-
     const publicLink = `${window.location.origin}/kurban-info/${kurbanCode}`
 
     const copyLink = async () => {
@@ -178,27 +157,8 @@ function EditBuyukbas() {
       e.preventDefault();
       
       setLoading(true)
-    
-      // eğer video dosyası seçilmişse
-      if(singleFile) {
-        const form = new FormData();
-        form.append('file', singleFile);
 
-        try {
-          const upload = await BKurbanService.upload(form, _id, uploadFileOption);
-          if(!upload.data.error) {
-            setNoty({ isOpen: true, title: "Kaydedildi", message: "Video yüklendi." })
-            setTimeout(() => navigate(`/kurum/dashboard/${active_project_id}`), 1000)
-          } else {
-            setLoading(false)
-            setError({ key: upload.data.error?.message || 'Video yüklenemedi. (Sunucu depolama ayarı eksik olabilir.)' })
-          }
-        } catch (err) {
-          setLoading(false)
-          setError({ key: 'Video yüklenirken bir hata oluştu. Sunucu dosya depolama (S3) ayarı yapılmamış olabilir.' })
-        }
-
-      } else if(kurbanImage) {
+      if(kurbanImage) {
         const imageForm = new FormData();
         imageForm.append('kurban_img', kurbanImage);
 
@@ -310,8 +270,8 @@ function EditBuyukbas() {
               )}
             </SectionCard>
 
-            {/* Video / Embed */}
-            <SectionCard icon={FilmIcon} title="Kurban Videosu" description="Embed kodu yapıştırın veya video dosyası yükleyin.">
+            {/* Video Embed */}
+            <SectionCard icon={FilmIcon} title="Kurban Videosu" description="Video platformundan embed kodu / link yapıştırın.">
               <label htmlFor="youtube_embed" className="block text-sm mb-1">
                 <span className="text-gray-700 dark:text-gray-400">Video Embed Kodu:</span>
                 <textarea
@@ -331,23 +291,6 @@ function EditBuyukbas() {
               </div>
 
               <Input value={vidyome_embed} title="Vidyome Embed Linki (opsiyonel)" name="vidyome_embed" onChange={onChange} errors={errors} />
-
-              <label className="block text-sm mt-2">
-                <span className="text-gray-700 dark:text-gray-400">Kesim Videosu Dosyası (opsiyonel):</span>
-                <input
-                  type="file"
-                  name="file"
-                  accept="video/*"
-                  onChange={(e) => SingleFileChange(e)}
-                  className={`mt-1 ${fileInputClass}`}
-                />
-              </label>
-
-              {videoPath && (
-                <video controls className="mt-4 w-full max-h-96 rounded-lg bg-black">
-                  <source src={videoPath} type="video/mp4" />
-                </video>
-              )}
             </SectionCard>
 
             {/* Paylaşım Linki */}

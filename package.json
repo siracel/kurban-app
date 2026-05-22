@@ -28,7 +28,6 @@
     "express-async-handler": "^1.2.0",
     "express-handlebars": "^6.0.6",
     "express-session": "^1.17.3",
-    "fluent-ffmpeg": "^2.1.2",
     "form-data": "^4.0.2",
     "jsonwebtoken": "^8.5.1",
     "method-override": "^3.0.0",
@@ -42,7 +41,6 @@
     "passport-google-oauth20": "^2.0.0",
     "password": "^0.1.1",
     "path": "^0.12.7",
-    "progress-stream": "^2.0.0",
     "socket.io": "^4.5.1"
   },
   "devDependencies": {

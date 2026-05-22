@@ -47,10 +47,6 @@ class BKurbanService {
         return axios.put(`/buyukbas-kurban/reorder`, { items });
     }
 
-    upload(payload, id, uploadFileOption) {
-        return axios.post(`/buyukbas-kurban/video/${id}`, payload, uploadFileOption);
-    }
-
     uploadImage(payload, id) {
         return axios.post(`/buyukbas-kurban/image/${id}`, payload);
     }

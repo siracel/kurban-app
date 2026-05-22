@@ -3,10 +3,9 @@ import multer from 'multer'
 import multerS3 from 'multer-s3'
 import { S3Client } from '@aws-sdk/client-s3'
 import AWS from 'aws-sdk'
-import progress from 'progress-stream'
 const router = express.Router()
 
-import { create, update, _delete, uploadKurbanVideo, uploadKurbanImage, changeKurbanProcess, reorderKurbans } from '../controllers/BuyukbasKurbanController.js'
+import { create, update, _delete, uploadKurbanImage, changeKurbanProcess, reorderKurbans } from '../controllers/BuyukbasKurbanController.js'
 
 router.post('/:project_id', create)
 
@@ -90,7 +89,6 @@ s3.createBucket({
 //const upload = multer({storage: storage, fileFilter: filefilter})
 //const upload = multer({storage: storage});
 
-router.post('/video/:id', upload.single('file'), uploadKurbanVideo)
 router.post('/image/:id', upload.single('kurban_img'), uploadKurbanImage)
 
 router.delete('/:id', _delete)
