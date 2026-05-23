@@ -1,7 +1,5 @@
 import Buyukbas from '../models/Buyukbas.js'
-import MessageTemplate from '../models/MessageTemplate.js'
 import asyncHandler from 'express-async-handler'
-import fetch from 'cross-fetch'
 import Process from '../models/Process.js';
 import AWS from 'aws-sdk'
 import KurbanProcessChangeFacade from './KurbanProcessChangeFacade/KurbanProcessChangeFacade.js';
@@ -52,64 +50,7 @@ const reorderKurbans = async (req, res) => {
 const update = async (req,res) => {
     // net hisse fiyat number gelmeli yoksa hata veriyor
     const id = { _id: req.params.id }
-    const { _id, message_template, process, kurban_kupe_no, net_hisse_fiyat, kurban_weight, kurban_note, kurban_hisse_group, youtube_embed, vidyome_embed } = req.body
-
-    /* Process/İşlem adımına bağlı mesaj gönderme */
-    let is_message_send = 0
-    if(req.body.process) {
-        const is_message_template = await Process.findById(req.body.process)
-  
-
-        if(is_message_template.message_template) {
-    
-        const buyukbas = await Buyukbas.find({_id: _id}).populate("hisse")
-        const message = await MessageTemplate.findById(is_message_template.message_template) 
-            if(buyukbas[0].hisse.length > 0) {
-                const hissedar_adet = buyukbas[0].hisse.length
-                let gonderilen_mesaj = 0
-                let GSMs = ""
-                let message_txt = ""
-                buyukbas[0].hisse.forEach(hissedar => {
-                    GSMs+=hissedar.hissedar_gsm
-                    gonderilen_mesaj++
-                    gonderilen_mesaj < hissedar_adet ? GSMs+=";" : null
-                });
-        
-                message_txt = message.message_content
-                
-                // console.log(message_txt)
-                // console.log(buyukbas[0].hisse)
-
-                await fetch(`http://api.pusulasms.com/toplusms.asp?kullanici=YENIBOSNA&parola=655330&telefonlar=${GSMs}&mesaj=${message_txt}&gonderen=Y.BosnaYurt`)
-                .then(res => {
-                    if (res.status >= 400) { throw new Error("Bad response from server - BuyukbasKurbanController.js"); }
-                    return {status: res.status}
-                })
-                .then(data => {
-                    if(data.status === 200) { is_message_send = 1 }
-                })
-                .catch(err => { console.error(err); });
-            }
-        }
-    }
-    
-    // change process or message template
-    if(process || message_template) {
-        let doc = await Buyukbas.findOneAndUpdate(id, {process: process}, {new: true});
-
-        // burası sadece process change de tetiklenmeli aslında
-        var io = req.app.get('socketio');
-        // değişiklik yapılan process id sinde bir socket oluştur
-        io.emit(doc.process)
-
-        io.on('end', function (){
-            io.disconnect(0);
-        });
-
-        return res.status(200).json({...doc._doc, is_message_send: is_message_send});
-    }
-    
-
+    const { kurban_kupe_no, net_hisse_fiyat, kurban_weight, kurban_note, kurban_hisse_group, youtube_embed, vidyome_embed } = req.body
     // _id immutable bir alan; req.body içinde gelirse Mongo hata fırlatır.
     // Bu yüzden sadece düzenlenebilir alanları açıkça güncelliyoruz.
     const updateFields = {

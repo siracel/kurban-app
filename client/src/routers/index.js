@@ -31,6 +31,7 @@ import EditHisseGroup from '../views/Kurum/pages/HisseGroup/EditHisseGroup'
 import CreateHisseGroup from '../views/Kurum/pages/HisseGroup/CreateHisseGroup'
 import Setting from '../views/Kurum/pages/Setting'
 import NewSMSAPI from '../views/Kurum/pages/Setting/components/NewSMSAPI'
+import EditSMSAPI from '../views/Kurum/pages/Setting/components/EditSMSAPI'
 
 
 import KurumLogin from '../views/Kurum/pages/Login'
@@ -197,6 +198,11 @@ const routers = (isUserAuth, isKurumAuth, isAdminAuth) => [
             {
                 path: 'new-message-api',
                 element: <NewSMSAPI />
+            },
+            {
+                path: 'edit-sms-api',
+                exact: false,
+                element: <EditSMSAPI />
             },
             {
                 path: '*',

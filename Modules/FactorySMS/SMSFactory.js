@@ -1,9 +1,11 @@
 import Ayfatel from './APIs/Ayfatel.js';
 import Pusula from './APIs/Pusula.js';
+import Mutlucell from './APIs/Mutlucell.js';
 
 const messageAPIs = {
     Ayfatel,
-    Pusula
+    Pusula,
+    Mutlucell
 }
 
 class SMSFactory {    
